@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "prebuild": "npx del-cli ./dist",
+    "build": "parcel build ./src/index.html",
     "start": "parcel src/index.html -p 8080",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
