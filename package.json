@@ -2,32 +2,60 @@
   "name": "pixel",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "prebuild": "npx del-cli ./dist",
-    "build": "parcel build ./src/index.html --public-url /pixel/",
-    "start": "parcel src/index.html -p 8080",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:client": "parcel watch src/client/index.html --out-dir dist/client",
+    "dev:server": "nodemon --watch src/server --exec babel-node src/server/index.ts",
+    "build:client": "parcel build src/client/index.html --out-dir dist/client",
+    "build:server": "rollup -c",
+    "prebuild": "rm -rf dist",
+    "build": "npm run build:client && npm run build:server",
+    "build:start": "npm run build && npm start",
+    "dev": "npm run dev:server & npm run dev:client"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ioneone/pixel.git"
   },
-  "author": "",
+  "author": "Junhong Wang",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/ioneone/pixel/issues"
   },
   "homepage": "https://github.com/ioneone/pixel#readme",
   "dependencies": {
-    "pixi.js": "^5.3.3"
+    "express": "^4.17.1",
+    "http": "0.0.1-security",
+    "pixi.js": "^5.3.3",
+    "socket.io": "^2.3.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.3",
+    "@babel/node": "^7.12.6",
+    "@babel/preset-env": "^7.12.1",
+    "@types/express": "^4.17.8",
+    "@types/socket.io": "^2.1.8",
+    "babel-cli": "^6.26.0",
+    "nodemon": "^2.0.6",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-static-files-copy": "^2.5.0",
+    "rollup": "^2.33.1",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-replace": "^2.2.0",
     "typescript": "^4.0.5"
   },
   "staticFiles": {
-    "staticPath": "res"
+    "staticPath": [
+      {
+        "outDirPattern": "**/client",
+        "staticPath": "res"
+      }
+    ]
   }
 }
