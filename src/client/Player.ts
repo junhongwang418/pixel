@@ -14,7 +14,7 @@ enum State {
  * The sprite the user can control.
  */
 class Player extends Sprite {
-  private state = State.IDLE;
+  private _state = State.IDLE;
 
   public constructor() {
     super({
@@ -47,17 +47,29 @@ class Player extends Sprite {
     const keyD = Keyboard.shared.getKey("d");
 
     if (keyA.isDown || keyD.isDown) {
-      if (this.state == State.IDLE) {
-        this.textures = this.getRunTextures();
-        this.state = State.RUN;
-        this.play();
-      }
+      this.setState(State.RUN);
     } else {
-      if (this.state == State.RUN) {
-        this.textures = this.getIdleTextures();
-        this.state = State.IDLE;
-        this.play();
-      }
+      this.setState(State.IDLE);
+    }
+  }
+
+  public get state(): State {
+    return this._state;
+  }
+
+  public setState(state: State) {
+    if (this._state === state) return;
+
+    if (state === State.IDLE) {
+      this._state = state;
+      this.textures = this.getIdleTextures();
+      this.play();
+    } else if (state === State.RUN) {
+      this._state = state;
+      this.textures = this.getRunTextures();
+      this.play();
+    } else {
+      console.error("illegal state");
     }
   }
 

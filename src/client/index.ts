@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 import Keyboard from "./Keyboard";
 import Player from "./Player";
+import io from "socket.io-client";
 
 import "./style.css";
 
@@ -41,13 +42,17 @@ loader.onProgress.add((loader) => {
   console.log(`progress: ${loader.progress}%`);
 });
 
+const players: { [key: string]: Player } = {};
+
 // callback when all the files are loaded
 loader.load(() => {
   console.log("All files loaded");
 
+  const socket = io();
+
   const mrman = new Player();
 
-  mrman.position.set(50, 0);
+  players[socket.id] = mrman;
 
   // add the sprite to the scene
   app.stage.addChild(mrman);
@@ -55,5 +60,49 @@ loader.load(() => {
   app.ticker.add((deltaMs) => {
     mrman.tick(deltaMs);
     Keyboard.shared.tick();
+    socket.emit("update", {
+      x: mrman.x,
+      y: mrman.y,
+      state: mrman.state,
+      scaleX: mrman.scale.x,
+    });
+  });
+
+  socket.on(
+    "init",
+    (data: {
+      [key: string]: {
+        x: number;
+        y: number;
+        state: number;
+        scaleX: number;
+      };
+    }) => {
+      Object.entries(data).forEach(([playerId, playerData]) => {
+        const player = new Player();
+        player.position.set(playerData.x, playerData.y);
+        player.setState(playerData.state);
+        player.scale.x = playerData.scaleX;
+        players[playerId] = player;
+        app.stage.addChild(player);
+      });
+    }
+  );
+
+  socket.on("create", ({ id }) => {
+    const player = new Player();
+    players[id] = player;
+    app.stage.addChild(player);
+  });
+
+  socket.on("update", ({ id, x, y, state, scaleX }) => {
+    players[id].position.set(x, y);
+    players[id].setState(state);
+    players[id].scale.x = scaleX;
+  });
+
+  socket.on("delete", ({ id }) => {
+    app.stage.removeChild(players[id]);
+    delete players[id];
   });
 });
