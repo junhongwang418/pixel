@@ -5,6 +5,7 @@ import babel from 'rollup-plugin-babel';
 import replace from 'rollup-plugin-replace';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
+import typescript from '@rollup/plugin-typescript';
 
 let pkg = require('./package.json')
 let external = Object.keys(pkg.dependencies)
@@ -17,6 +18,7 @@ export default {
       module: true,
       preferBuiltins: false
     }),
+    typescript(),
     babel({
       babelrc: false,
       exclude: 'node_modules/**',
