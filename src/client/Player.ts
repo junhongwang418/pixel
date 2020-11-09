@@ -5,16 +5,23 @@ import Keyboard from "./Keyboard";
 /**
  * An enum that represents player state.
  */
-enum State {
+export enum PlayerState {
   IDLE,
   RUN,
+}
+
+export interface PlayerJson {
+  x: number;
+  y: number;
+  state: PlayerState;
+  scaleX: number;
 }
 
 /**
  * The sprite the user can control.
  */
 class Player extends Sprite {
-  private _state = State.IDLE;
+  private _state = PlayerState.IDLE;
 
   public constructor() {
     super({
@@ -47,29 +54,62 @@ class Player extends Sprite {
     const keyD = Keyboard.shared.getKey("d");
 
     if (keyA.isDown || keyD.isDown) {
-      this.setState(State.RUN);
+      this.setState(PlayerState.RUN);
     } else {
-      this.setState(State.IDLE);
+      this.setState(PlayerState.IDLE);
     }
   }
 
-  public get state(): State {
+  /**
+   * Apply all the properties specified in the json.
+   * @param {PlayerJson} json properties to apply
+   */
+  public applyJson(json: PlayerJson): void {
+    const { x, y, state, scaleX } = json;
+    this.position.set(x, y);
+    this.scale.x = scaleX;
+    this.setState(state);
+  }
+
+  /**
+   * Construct a player object based on the json.
+   * @param {PlayerJson} json properties to initialize the player
+   */
+  public static fromJson(json: PlayerJson): Player {
+    const player = new Player();
+    player.applyJson(json);
+    return player;
+  }
+
+  /**
+   * Get a json representing current state of the player.
+   */
+  public get json(): PlayerJson {
+    return {
+      x: this.x,
+      y: this.y,
+      state: this.state,
+      scaleX: this.scale.x,
+    };
+  }
+
+  public get state(): PlayerState {
     return this._state;
   }
 
-  public setState(state: State) {
+  public setState(state: PlayerState) {
     if (this._state === state) return;
 
-    if (state === State.IDLE) {
-      this._state = state;
+    if (state === PlayerState.IDLE) {
       this.textures = this.getIdleTextures();
-      this.play();
-    } else if (state === State.RUN) {
       this._state = state;
+      this.play();
+    } else if (state === PlayerState.RUN) {
       this.textures = this.getRunTextures();
+      this._state = state;
       this.play();
     } else {
-      console.error("illegal state");
+      console.error(`Illegal player state ${state}`);
     }
   }
 

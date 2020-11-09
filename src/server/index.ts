@@ -1,20 +1,19 @@
-const express = require("express");
-const http = require("http");
-const socketio = require("socket.io");
+import express from "express";
+import http from "http";
+import SocketIO from "socket.io";
+import { PlayerJson } from "../client/Player";
 
 const app = express();
 const server = http.createServer(app);
-const io = socketio(server);
+const io = new SocketIO.Server(server);
 
 const port = process.env.PORT || 3000;
 
 app.use(express.static("dist/client"));
 
-const players = {};
+const players: { [id: string]: PlayerJson } = {};
 
 io.on("connection", (socket) => {
-  console.log(`player with id ${socket.id} joined the game`);
-
   socket.emit("init", players);
 
   players[socket.id] = {
@@ -23,30 +22,25 @@ io.on("connection", (socket) => {
     state: 0,
     scaleX: 1,
   };
+
   socket.broadcast.emit("create", {
     id: socket.id,
+    json: players[socket.id],
   });
 
   socket.on("disconnect", () => {
-    console.log(`player with id ${socket.id} left the game`);
     socket.broadcast.emit("delete", {
       id: socket.id,
     });
     delete players[socket.id];
   });
 
-  socket.on("update", ({ x, y, state, scaleX }) => {
+  socket.on("update", (json: PlayerJson) => {
     socket.broadcast.emit("update", {
       id: socket.id,
-      x,
-      y,
-      state,
-      scaleX,
+      json,
     });
-    players[socket.id].x = x;
-    players[socket.id].y = y;
-    players[socket.id].state = state;
-    players[socket.id].scaleX = scaleX;
+    players[socket.id] = json;
   });
 });
 
