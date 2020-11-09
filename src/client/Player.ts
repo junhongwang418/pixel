@@ -53,6 +53,16 @@ class Player extends Sprite {
     const keyA = Keyboard.shared.getKey("a");
     const keyD = Keyboard.shared.getKey("d");
 
+    if (keyA.isDown) {
+      this.vx = -1;
+      this.flipped = true;
+    } else if (keyD.isDown) {
+      this.vx = 1;
+      this.flipped = false;
+    } else {
+      this.vx = 0;
+    }
+
     if (keyA.isDown || keyD.isDown) {
       this.setState(PlayerState.RUN);
     } else {
