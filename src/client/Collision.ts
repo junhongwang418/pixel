@@ -1,4 +1,4 @@
-import Sprite from "./Sprite";
+import * as PIXI from "pixi.js";
 
 /**
  * A singleton class that handles the collision detection of the game.
@@ -8,25 +8,21 @@ class Collision {
 
   private constructor() {}
 
-  public overlap(sprite1: Sprite, sprite2: Sprite): boolean {
-    return this.overlapX(sprite1, sprite2) && this.overlapY(sprite1, sprite2);
+  public overlap(s1: PIXI.Sprite, s2: PIXI.Sprite): boolean {
+    return this.overlapX(s1, s2) && this.overlapY(s1, s2);
   }
 
-  private overlapX(sprite1: Sprite, sprite2: Sprite): boolean {
+  private overlapX(s1: PIXI.Sprite, s2: PIXI.Sprite): boolean {
     // minimum distance from center required for separation
-    const minDistanceX = sprite1.width / 2 + sprite2.width / 2;
-    const distanceX = Math.abs(
-      sprite1.x + sprite1.width / 2 - (sprite2.x + sprite2.width / 2)
-    );
+    const minDistanceX = s1.width / 2 + s2.width / 2;
+    const distanceX = Math.abs(s1.x + s1.width / 2 - (s2.x + s2.width / 2));
     return distanceX < minDistanceX;
   }
 
-  private overlapY(sprite1: Sprite, sprite2: Sprite): boolean {
+  private overlapY(s1: PIXI.Sprite, s2: PIXI.Sprite): boolean {
     // minimum distance from center required for separation
-    const minDistanceY = sprite1.height / 2 + sprite2.height / 2;
-    const distanceY = Math.abs(
-      sprite1.y + sprite1.height / 2 - (sprite2.y + sprite2.height / 2)
-    );
+    const minDistanceY = s1.height / 2 + s2.height / 2;
+    const distanceY = Math.abs(s1.y + s1.height / 2 - (s2.y + s2.height / 2));
     return distanceY < minDistanceY;
   }
 }
