@@ -35,6 +35,14 @@ class Sprite extends PIXI.AnimatedSprite {
     this.addChild(this.collisionBox);
   }
 
+  public setHit(hit: boolean) {
+    if (hit) {
+      this.collisionBox.tint = 0xff0000;
+    } else {
+      this.collisionBox.tint = 0xffffff;
+    }
+  }
+
   /**
    * Update state for current frame.
    *

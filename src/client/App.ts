@@ -3,6 +3,7 @@ import Keyboard from "./Keyboard";
 import Player, { PlayerJson } from "./Player";
 import io from "socket.io-client";
 import Sprite from "./Sprite";
+import Collision from "./Collision";
 
 class App {
   public constructor() {}
@@ -73,6 +74,11 @@ class App {
       app.ticker.add((deltaMs) => {
         mrman.tick(deltaMs);
         tile.tick(deltaMs);
+
+        const hit = Collision.shared.overlap(mrman, tile);
+        mrman.setHit(hit);
+        tile.setHit(hit);
+
         Keyboard.shared.tick();
         socket.emit("update", mrman.json);
       });
