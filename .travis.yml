@@ -1,9 +1,6 @@
 language: node_js
 node_js:
-  - "stable"
-cache:
-  directories:
-    - node_modules
+  - 12
 script:
   - npm run test
   - npm run build

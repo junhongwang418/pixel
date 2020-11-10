@@ -8,7 +8,10 @@ import Collision from "./Collision";
 class App {
   public constructor() {}
 
-  public start() {
+  /**
+   * Start the game.
+   */
+  public start(): void {
     // Disable interpolation when scaling, will make texture be pixelated
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
