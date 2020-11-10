@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Error: no test specified\" && exit 0",
     "dev:client": "parcel watch src/client/index.html --out-dir dist/client",
     "dev:server": "nodemon --watch src/server --exec babel-node --extensions \".ts\" src/server/index.ts",
     "build:client": "parcel build src/client/index.html --out-dir dist/client",
