@@ -71,6 +71,11 @@ class App {
         tiles.push(tile);
       }
 
+      const anotherTile = new Tile();
+      anotherTile.x = 60;
+      anotherTile.y = 100 - 16;
+      tiles.push(anotherTile);
+
       players[socket.id] = mrman;
 
       // add the sprite to the scene

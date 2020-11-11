@@ -10,6 +10,9 @@ export enum PlayerState {
   RUN,
 }
 
+/**
+ * The json representation of the player data. The data is used to synchronize the players across all the client sockets.
+ */
 export interface PlayerJson {
   x: number;
   y: number;
@@ -19,12 +22,13 @@ export interface PlayerJson {
 
 /**
  * The sprite the user can control.
+ * @class
+ *
+ * @constructor
  */
 class Player extends Sprite {
-  private _state = PlayerState.IDLE;
-
-  // update this property to flip the textures
-  protected flipped: boolean = false;
+  private _state: PlayerState;
+  private _flipped: boolean = false;
 
   public constructor() {
     super({
@@ -43,9 +47,7 @@ class Player extends Sprite {
         PIXI.Loader.shared.resources["assets/mrman/run_5.png"].texture,
       ],
     });
-
-    this.textures = this.getIdleTextures();
-    this.play();
+    this.setState(PlayerState.IDLE);
   }
 
   /**
@@ -63,22 +65,20 @@ class Player extends Sprite {
     if (keyA.isDown) {
       this.vx = -1;
       this.setFlipped(true);
+      this.setState(PlayerState.RUN);
     } else if (keyD.isDown) {
       this.vx = 1;
       this.setFlipped(false);
-    } else {
-      this.vx = 0;
-    }
-
-    if (keyA.isDown || keyD.isDown) {
       this.setState(PlayerState.RUN);
     } else {
+      this.vx = 0;
       this.setState(PlayerState.IDLE);
     }
   }
 
   /**
    * Apply all the properties specified in the json.
+   *
    * @param {PlayerJson} json properties to apply
    */
   public applyJson(json: PlayerJson): void {
@@ -90,6 +90,7 @@ class Player extends Sprite {
 
   /**
    * Construct a player object based on the json.
+   *
    * @param {PlayerJson} json properties to initialize the player
    */
   public static fromJson(json: PlayerJson): Player {
@@ -114,15 +115,20 @@ class Player extends Sprite {
     return this._state;
   }
 
+  /**
+   * Update the active textures based on the new player state.
+   *
+   * @param {PlayerState} state the new player state
+   */
   public setState(state: PlayerState) {
     if (this._state === state) return;
 
     if (state === PlayerState.IDLE) {
-      this.textures = this.getIdleTextures();
+      this.textures = this.texturesMap["idle"];
       this._state = state;
       this.play();
     } else if (state === PlayerState.RUN) {
-      this.textures = this.getRunTextures();
+      this.textures = this.texturesMap["run"];
       this._state = state;
       this.play();
     } else {
@@ -131,26 +137,17 @@ class Player extends Sprite {
   }
 
   /**
-   * Get textures for idle state.
+   * Update the scale and position of the sprite to flip the texture horizontally.
+   *
+   * @param {boolean} flipped whether the sprite should be flipped or not
    */
-  private getIdleTextures(): PIXI.Texture[] {
-    return this.texturesMap["idle"];
-  }
-
-  /**
-   * Get textures for run state.
-   */
-  private getRunTextures(): PIXI.Texture[] {
-    return this.texturesMap["run"];
-  }
-
   private setFlipped(flipped: boolean) {
-    if (this.flipped === flipped) return;
+    if (this._flipped === flipped) return;
 
     this.scale.x *= -1;
     this.position.x -= this.scale.x * this.width;
 
-    this.flipped = flipped;
+    this._flipped = flipped;
   }
 }
 

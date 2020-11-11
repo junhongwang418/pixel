@@ -18,7 +18,7 @@ class Sprite extends PIXI.AnimatedSprite {
   protected collisionBox: PIXI.Graphics;
 
   // velocity
-  protected vx = 0;
+  public vx = 0;
   public vy = 0;
 
   protected bodyType: BodyType;
@@ -38,7 +38,7 @@ class Sprite extends PIXI.AnimatedSprite {
     // initialize collision box
     const bounds = this.getBounds();
     this.collisionBox = new PIXI.Graphics();
-    this.collisionBox.lineStyle(1, 0xffffff);
+    this.collisionBox.lineStyle(0.1, 0xffffff);
     this.collisionBox.drawRect(0, 0, bounds.width, bounds.height);
     this.addChild(this.collisionBox);
   }
@@ -62,6 +62,13 @@ class Sprite extends PIXI.AnimatedSprite {
       this.x += this.vx * deltaMs;
       this.y += this.vy * deltaMs;
     }
+  }
+
+  public get center(): { x: number; y: number } {
+    return {
+      x: this.x + (this.width / 2) * this.scale.x,
+      y: this.y + (this.height / 2) * this.scale.y,
+    };
   }
 }
 
