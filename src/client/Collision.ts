@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import Player from "./Player";
 
 /**
  * A singleton class that handles the collision detection of the game.
@@ -10,6 +11,23 @@ class Collision {
   public static shared = new Collision();
 
   private constructor() {}
+
+  /**
+   * Make sure collision works and separate dynamic bodies from static bodies.
+   */
+  public tick(player: Player, tiles: PIXI.Sprite[]) {
+    tiles.forEach((tile) => {
+      if (this.overlap(player, tile)) {
+        // separate the player and the tile
+        const minDistanceY = player.height / 2 + tile.height / 2;
+        const distanceY =
+          tile.y + tile.height / 2 - (player.y + player.height / 2);
+        const overlapY = minDistanceY - distanceY;
+        player.y -= overlapY;
+        player.vy = 0;
+      }
+    });
+  }
 
   /**
    * Returns true if the sprites' bounds intersect.

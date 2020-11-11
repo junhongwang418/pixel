@@ -4,6 +4,7 @@ import Player, { PlayerJson } from "./Player";
 import io from "socket.io-client";
 import Sprite from "./Sprite";
 import Collision from "./Collision";
+import Tile from "./Tile";
 
 class App {
   public constructor() {}
@@ -62,25 +63,25 @@ class App {
       const socket = io();
 
       const mrman = new Player();
-      const tile = new Sprite({
-        tile0: loader.resources["assets/tiles/tile_0.png"].texture,
-      });
-
-      tile.x = 100;
+      const tiles = [];
+      for (let i = 0; i < 20; i++) {
+        const tile = new Tile();
+        tile.x = i * 16;
+        tile.y = 100;
+        tiles.push(tile);
+      }
 
       players[socket.id] = mrman;
 
       // add the sprite to the scene
       app.stage.addChild(mrman);
-      app.stage.addChild(tile);
+      app.stage.addChild(...tiles);
 
       app.ticker.add((deltaMs) => {
         mrman.tick(deltaMs);
-        tile.tick(deltaMs);
+        tiles.map((tile) => tile.tick(deltaMs));
 
-        const hit = Collision.shared.overlap(mrman, tile);
-        mrman.setHit(hit);
-        tile.setHit(hit);
+        Collision.shared.tick(mrman, tiles);
 
         Keyboard.shared.tick();
         socket.emit("update", mrman.json);

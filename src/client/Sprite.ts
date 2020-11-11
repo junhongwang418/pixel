@@ -1,5 +1,9 @@
 import * as PIXI from "pixi.js";
-import Keyboard from "./Keyboard";
+
+export enum BodyType {
+  Dynamic,
+  Static,
+}
 
 /**
  * A sprite class with physics.
@@ -18,14 +22,21 @@ class Sprite extends PIXI.AnimatedSprite {
 
   // velocity
   protected vx = 0;
-  protected vy = 0;
+  public vy = 0;
 
-  public constructor(textureMap: { [key: string]: PIXI.Texture }) {
+  protected bodyType: BodyType;
+
+  public constructor(
+    textureMap: { [key: string]: PIXI.Texture },
+    bodyType?: BodyType
+  ) {
     super(Object.values(textureMap));
 
     this.textureMap = textureMap;
     this.animationSpeed = 0.167;
     this.play();
+
+    this.bodyType = bodyType || BodyType.Dynamic;
 
     // initialize collision box
     const bounds = this.getBounds();
@@ -49,17 +60,12 @@ class Sprite extends PIXI.AnimatedSprite {
    * @param {number} deltaMs time it took to reach current frame from previous frame in milliseconds
    */
   public tick(deltaMs: number): void {
-    this.vy += Sprite.GRAVITY * deltaMs;
-
     this.maybeFlip();
 
-    this.x += this.vx * deltaMs;
-    this.y += this.vy * deltaMs;
-
-    // fake collision
-    if (this.y >= 100) {
-      this.y = 100;
-      this.vy = 0;
+    if (this.bodyType === BodyType.Dynamic) {
+      this.vy += Sprite.GRAVITY * deltaMs;
+      this.x += this.vx * deltaMs;
+      this.y += this.vy * deltaMs;
     }
   }
 
