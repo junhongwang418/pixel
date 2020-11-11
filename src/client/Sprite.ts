@@ -14,10 +14,7 @@ export enum BodyType {
 class Sprite extends PIXI.AnimatedSprite {
   private static readonly GRAVITY = 0.1;
 
-  // update this property to flip the textures
-  protected flipped: boolean = false;
-
-  protected textureMap: { [key: string]: PIXI.Texture } = {};
+  protected texturesMap: { [key: string]: PIXI.Texture[] } = {};
   protected collisionBox: PIXI.Graphics;
 
   // velocity
@@ -27,12 +24,12 @@ class Sprite extends PIXI.AnimatedSprite {
   protected bodyType: BodyType;
 
   public constructor(
-    textureMap: { [key: string]: PIXI.Texture },
+    texturesMap: { [key: string]: PIXI.Texture[] },
     bodyType?: BodyType
   ) {
-    super(Object.values(textureMap));
+    super(Object.values(texturesMap)[0]);
 
-    this.textureMap = textureMap;
+    this.texturesMap = texturesMap;
     this.animationSpeed = 0.167;
     this.play();
 
@@ -60,23 +57,10 @@ class Sprite extends PIXI.AnimatedSprite {
    * @param {number} deltaMs time it took to reach current frame from previous frame in milliseconds
    */
   public tick(deltaMs: number): void {
-    this.maybeFlip();
-
     if (this.bodyType === BodyType.Dynamic) {
       this.vy += Sprite.GRAVITY * deltaMs;
       this.x += this.vx * deltaMs;
       this.y += this.vy * deltaMs;
-    }
-  }
-
-  /**
-   * Flip the textures if necessary.
-   */
-  private maybeFlip(): void {
-    if (this.flipped) {
-      this.textures.map((texture) => (texture.rotate = 12));
-    } else {
-      this.textures.map((texture) => (texture.rotate = 0));
     }
   }
 }

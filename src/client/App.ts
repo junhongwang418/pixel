@@ -84,7 +84,8 @@ class App {
         Collision.shared.tick(mrman, tiles);
 
         // make the screen chase the player
-        app.stage.pivot.x = mrman.position.x + mrman.width / 2;
+        app.stage.pivot.x =
+          mrman.position.x + (mrman.width / 2) * mrman.scale.x;
         app.stage.pivot.y = mrman.position.y + mrman.height / 2;
         app.stage.position.x = app.renderer.width / 2;
         app.stage.position.y = app.renderer.height / 2;

@@ -5,7 +5,7 @@ class Tile extends Sprite {
   constructor() {
     super(
       {
-        tile0: PIXI.Loader.shared.resources["assets/tiles/tile_0.png"].texture,
+        tile: [PIXI.Loader.shared.resources["assets/tiles/tile_0.png"].texture],
       },
       BodyType.Static
     );

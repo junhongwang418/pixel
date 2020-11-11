@@ -36,11 +36,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("update", (json: PlayerJson) => {
+    players[socket.id] = json;
+
     socket.broadcast.emit("update", {
       id: socket.id,
-      json,
+      json: players[socket.id],
     });
-    players[socket.id] = json;
   });
 });
 
