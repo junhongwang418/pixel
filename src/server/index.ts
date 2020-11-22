@@ -1,6 +1,6 @@
-import express from "express";
-import http from "http";
-import SocketIO from "socket.io";
+import * as express from "express";
+import * as http from "http";
+import * as SocketIO from "socket.io";
 import { PlayerJson } from "../client/Player";
 
 const app = express();

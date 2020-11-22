@@ -8,10 +8,12 @@
     "dev:client": "parcel watch src/client/index.html --out-dir dist/client",
     "dev:server": "nodemon --watch src/server --exec babel-node --extensions \".ts\" src/server/index.ts",
     "dev": "npm run dev:server & npm run dev:client",
+    "docs": "typedoc --out docs src",
     "build:client": "parcel build src/client/index.html --out-dir dist/client",
     "build:server": "parcel build src/server/index.ts --out-dir dist --target node",
+    "build:docs": "typedoc --out dist/docs src",
     "prebuild": "rm -rf dist",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run build:client && npm run build:server && npm run build:docs",
     "build:start": "npm run build && npm start",
     "test": "jest"
   },
@@ -29,7 +31,7 @@
     "express": "^4.17.1",
     "http": "0.0.1-security",
     "pixi.js": "^5.3.3",
-    "socket.io": "^3.0.0",
+    "socket.io": "^3.0.3",
     "socket.io-client": "^3.0.0"
   },
   "devDependencies": {
@@ -49,6 +51,7 @@
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-static-files-copy": "^2.5.0",
     "ts-jest": "^26.4.4",
+    "typedoc": "^0.19.2",
     "typescript": "^4.0.5"
   },
   "staticFiles": {
