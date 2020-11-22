@@ -5,7 +5,30 @@ import io from "socket.io-client";
 import Collision from "./Collision";
 import Tile from "./Tile";
 
+/**
+ * Entry point of PixiJS application. Call {@link App#start} to start the game.
+ * @class
+ *
+ * @constructor
+ */
 class App {
+  // filepaths to all the textures needed for the game
+  public static readonly ASSETS = [
+    "assets/mrman/idle_0.png",
+    "assets/mrman/idle_1.png",
+    "assets/mrman/idle_2.png",
+    "assets/mrman/idle_3.png",
+    "assets/mrman/run_0.png",
+    "assets/mrman/run_1.png",
+    "assets/mrman/run_2.png",
+    "assets/mrman/run_3.png",
+    "assets/mrman/run_4.png",
+    "assets/mrman/run_5.png",
+    "assets/tiles/tile_0.png",
+    "assets/tiles/tile_1.png",
+    "assets/tiles/tile_2.png",
+  ];
+
   public constructor() {}
 
   /**
@@ -32,22 +55,8 @@ class App {
 
     const loader = PIXI.Loader.shared;
 
-    // load the texture we need
-    loader.add("assets/mrman/idle_0.png");
-    loader.add("assets/mrman/idle_1.png");
-    loader.add("assets/mrman/idle_2.png");
-    loader.add("assets/mrman/idle_3.png");
-
-    loader.add("assets/mrman/run_0.png");
-    loader.add("assets/mrman/run_1.png");
-    loader.add("assets/mrman/run_2.png");
-    loader.add("assets/mrman/run_3.png");
-    loader.add("assets/mrman/run_4.png");
-    loader.add("assets/mrman/run_5.png");
-
-    loader.add("assets/tiles/tile_0.png");
-    loader.add("assets/tiles/tile_1.png");
-    loader.add("assets/tiles/tile_2.png");
+    // load all the textures of the game
+    loader.add(App.ASSETS);
 
     loader.onProgress.add((loader) => {
       console.log(`progress: ${loader.progress}%`);
