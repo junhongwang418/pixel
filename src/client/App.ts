@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js";
 import Keyboard from "./Keyboard";
 import Player, { PlayerJson } from "./Player";
-import * as io from "socket.io-client";
+import io from "socket.io-client";
 import Collision from "./Collision";
 import Tile from "./Tile";
 
