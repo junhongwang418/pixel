@@ -7,14 +7,15 @@
     "start": "node dist/index.js",
     "dev:client": "parcel watch src/client/index.html --out-dir dist/client",
     "dev:server": "nodemon --watch src/server --exec babel-node --extensions \".ts\" src/server/index.ts",
-    "dev": "npm run dev:server & npm run dev:client",
-    "docs": "typedoc --out docs src",
+    "dev:docs": "npm run docs",
+    "dev": "npm run dev:server & npm run dev:client && npm run dev:docs",
     "build:client": "parcel build src/client/index.html --out-dir dist/client",
     "build:server": "parcel build src/server/index.ts --out-dir dist --target node",
-    "build:docs": "typedoc --out dist/docs src",
+    "build:docs": "npm run docs",
     "prebuild": "rm -rf dist",
     "build": "npm run build:client && npm run build:server && npm run build:docs",
     "build:start": "npm run build && npm start",
+    "docs": "typedoc --out dist/docs src",
     "test": "jest"
   },
   "repository": {

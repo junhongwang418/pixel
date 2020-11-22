@@ -10,6 +10,7 @@ const io = new SocketIO.Server(server);
 const port = process.env.PORT || 3000;
 
 app.use(express.static("dist/client"));
+app.use("/docs", express.static("dist/docs"));
 
 const players: { [id: string]: PlayerJson } = {};
 
