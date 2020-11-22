@@ -48,6 +48,7 @@ class Player extends Sprite {
       ],
     });
     this.setState(PlayerState.IDLE);
+    this.play();
   }
 
   /**
@@ -124,13 +125,11 @@ class Player extends Sprite {
     if (this._state === state) return;
 
     if (state === PlayerState.IDLE) {
-      this.textures = this.texturesMap["idle"];
+      this.setTextures(this.texturesMap["idle"]);
       this._state = state;
-      this.play();
     } else if (state === PlayerState.RUN) {
-      this.textures = this.texturesMap["run"];
+      this.setTextures(this.texturesMap["run"]);
       this._state = state;
-      this.play();
     } else {
       console.error(`Illegal player state ${state}`);
     }

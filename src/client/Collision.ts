@@ -13,35 +13,46 @@ class Collision {
   private constructor() {}
 
   /**
-   * Make sure collision works and separate dynamic bodies from static bodies.
-   * If a dynamic body intersects with a static body in both x and y axises,
-   * then it separates them by either pushing back the dynamic body in x or y axis,
-   * whichever takes less movement.
+   * Call this function every frame to enable collision detection.
    *
    * @param {Player} player the dynamic body
    * @param {Sprite[]} tiles the static bodies
    */
   public tick(player: Player, tiles: Sprite[]) {
-    tiles.forEach((tile) => {
-      if (this.overlap(player, tile)) {
-        // separate the player and the tile
-        const minDistanceX = player.width / 2 + tile.width / 2;
-        const distanceX = tile.center.x - player.center.x;
-        const overlapX = minDistanceX - distanceX;
+    tiles.forEach((tile) => this.separate(player, tile));
+  }
 
-        const minDistanceY = player.height / 2 + tile.height / 2;
-        const distanceY = tile.center.y - player.center.y;
-        const overlapY = minDistanceY - distanceY;
+  /**
+   * Make sure collision works and separate dynamic bodies from static bodies.
+   * If a dynamic body intersects with a static body in both x and y axises,
+   * then it separates them by either pushing back the dynamic body in x or y axis,
+   * whichever takes less movement.
+   *
+   * @param {Sprite} dynamicBody the movable sprite
+   * @param {Sprite} staticBody the immovable sprite
+   */
+  public separate(dynamicBody: Sprite, staticBody: Sprite): void {
+    // shortcut if possible
+    if (!this.overlap(dynamicBody, staticBody)) return;
 
-        if (Math.abs(overlapX) < Math.abs(overlapY)) {
-          player.x -= overlapX;
-          player.vx = 0;
-        } else {
-          player.y -= overlapY;
-          player.vy = 0;
-        }
-      }
-    });
+    const minDistanceX = dynamicBody.width / 2 + staticBody.width / 2;
+    const diffX = staticBody.center.x - dynamicBody.center.x;
+
+    const minDistanceY = dynamicBody.height / 2 + staticBody.height / 2;
+    const diffY = staticBody.center.y - dynamicBody.center.y;
+
+    const deltaX = diffX > 0 ? diffX - minDistanceX : diffX + minDistanceX;
+    const deltaY = diffY > 0 ? diffY - minDistanceY : diffY + minDistanceY;
+
+    if (Math.abs(deltaX) < Math.abs(deltaY)) {
+      dynamicBody.x += deltaX;
+      // bounce dynamic body back in x-axis so need to reset vx
+      dynamicBody.vx = 0;
+    } else {
+      dynamicBody.y += deltaY;
+      // bounce dynamic body back in y-axis so need to reset vx
+      dynamicBody.vy = 0;
+    }
   }
 
   /**

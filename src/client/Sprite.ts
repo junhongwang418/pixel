@@ -11,9 +11,12 @@ export enum BodyType {
  *
  * @constructor
  */
-class Sprite extends PIXI.AnimatedSprite {
+class Sprite extends PIXI.Sprite {
   private static readonly GRAVITY = 0.1;
 
+  private animationInterval;
+  private texureIndex = 0;
+  protected textures: PIXI.Texture[];
   protected texturesMap: { [key: string]: PIXI.Texture[] } = {};
   protected collisionBox: PIXI.Graphics;
 
@@ -27,21 +30,40 @@ class Sprite extends PIXI.AnimatedSprite {
     texturesMap: { [key: string]: PIXI.Texture[] },
     bodyType?: BodyType
   ) {
-    super(Object.values(texturesMap)[0]);
+    super(
+      Object.values(texturesMap)[0]
+        ? Object.values(texturesMap)[0][0]
+        : undefined
+    );
 
+    this.textures = Object.values(texturesMap)[0];
     this.texturesMap = texturesMap;
-    this.animationSpeed = 0.167;
-    this.play();
-
     this.bodyType = bodyType || BodyType.Dynamic;
 
     // initialize collision box
-    const bounds = this.getBounds();
     this.collisionBox = new PIXI.Graphics();
-    this.collisionBox.lineStyle(0.1, 0xffffff);
-    this.collisionBox.drawRect(0, 0, bounds.width, bounds.height);
+    this.collisionBox.lineStyle(0.5, 0xffffff);
+    this.collisionBox.drawRect(0, 0, this.width, this.height);
     this.addChild(this.collisionBox);
   }
+
+  /**
+   * Start animation
+   */
+  public play() {
+    // already animating
+    if (this.animationInterval) return;
+
+    this.animationInterval = setInterval(() => {
+      this.texureIndex = (this.texureIndex + 1) % this.textures.length;
+      this.texture = this.textures[this.texureIndex];
+    }, 100);
+  }
+
+  /**
+   * Stop animation
+   */
+  public stop() {}
 
   public setHit(hit: boolean) {
     if (hit) {
@@ -69,6 +91,15 @@ class Sprite extends PIXI.AnimatedSprite {
       x: this.x + (this.width / 2) * this.scale.x,
       y: this.y + (this.height / 2) * this.scale.y,
     };
+  }
+
+  /**
+   * Update current set of textures and reset animation frame from start.
+   * @param textures
+   */
+  public setTextures(textures: PIXI.Texture[]) {
+    this.textures = textures;
+    this.texureIndex = 0;
   }
 }
 

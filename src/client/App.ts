@@ -2,7 +2,6 @@ import * as PIXI from "pixi.js";
 import Keyboard from "./Keyboard";
 import Player, { PlayerJson } from "./Player";
 import io from "socket.io-client";
-import Sprite from "./Sprite";
 import Collision from "./Collision";
 import Tile from "./Tile";
 
@@ -75,6 +74,11 @@ class App {
       anotherTile.x = 60;
       anotherTile.y = 100 - 16;
       tiles.push(anotherTile);
+
+      const anotherTile2 = new Tile();
+      anotherTile2.x = 0;
+      anotherTile2.y = 100 - 16;
+      tiles.push(anotherTile2);
 
       players[socket.id] = mrman;
 
