@@ -16,9 +16,6 @@ import Tile from "./Tile";
  * This is where the application initializes the game and enter the game loop.
  */
 class App {
-  // how fast objects fall in pixels per frame
-  public static readonly GRAVITY = 0.1;
-
   // filepaths to all the textures needed for the game
   public static readonly ASSETS = [
     "assets/mrman/idle_0.png",

@@ -10,6 +10,9 @@ export enum BodyType {
  * A sprite class with physics and animation support.
  */
 class Sprite extends PIXI.Sprite {
+  // how fast objects fall in pixels per frame
+  public static readonly GRAVITY = 0.1;
+
   private animationInterval: NodeJS.Timeout | null;
   private texureIndex = 0;
   protected textures: PIXI.Texture[];
@@ -83,7 +86,7 @@ class Sprite extends PIXI.Sprite {
    */
   public tick(deltaMs: number): void {
     if (this.bodyType === BodyType.Dynamic) {
-      this.vy += App.GRAVITY * deltaMs;
+      this.vy += Sprite.GRAVITY * deltaMs;
       this.x += this.vx * deltaMs;
       this.y += this.vy * deltaMs;
     }
