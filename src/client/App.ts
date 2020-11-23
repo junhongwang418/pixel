@@ -6,12 +6,19 @@ import Collision from "./Collision";
 import Tile from "./Tile";
 
 /**
- * Entry point of PixiJS application. Call {@link App#start} to start the game.
- * @class
+ * Entry point of PixiJS application. Call {@link App.start} to start the game.
  *
- * @constructor
+ * ```typescript
+ * const app = new App();
+ * app.start();
+ * ```
+ *
+ * This is where the application initializes the game and enter the game loop.
  */
 class App {
+  // how fast objects fall in pixels per frame
+  public static readonly GRAVITY = 0.1;
+
   // filepaths to all the textures needed for the game
   public static readonly ASSETS = [
     "assets/mrman/idle_0.png",
@@ -29,10 +36,8 @@ class App {
     "assets/tiles/tile_2.png",
   ];
 
-  public constructor() {}
-
   /**
-   * Start the game.
+   * Initialize the game and enter the game loop.
    */
   public start(): void {
     // Disable interpolation when scaling, will make texture be pixelated

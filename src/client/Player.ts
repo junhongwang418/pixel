@@ -22,9 +22,6 @@ export interface PlayerJson {
 
 /**
  * The sprite the user can control.
- * @class
- *
- * @constructor
  */
 class Player extends Sprite {
   private _state: PlayerState;
@@ -54,8 +51,7 @@ class Player extends Sprite {
   /**
    * Update state for current frame.
    *
-   * @param {number} deltaMs time it took to reach current frame from previous frame in milliseconds
-   * @override
+   * @param deltaMs Time it took to reach current frame from previous frame in milliseconds
    */
   public tick(deltaMs: number): void {
     super.tick(deltaMs);
@@ -80,7 +76,7 @@ class Player extends Sprite {
   /**
    * Apply all the properties specified in the json.
    *
-   * @param {PlayerJson} json properties to apply
+   * @param {PlayerJson} json Properties to apply
    */
   public applyJson(json: PlayerJson): void {
     const { x, y, state, scaleX } = json;
@@ -92,7 +88,7 @@ class Player extends Sprite {
   /**
    * Construct a player object based on the json.
    *
-   * @param {PlayerJson} json properties to initialize the player
+   * @param json Properties to initialize the player
    */
   public static fromJson(json: PlayerJson): Player {
     const player = new Player();
@@ -119,7 +115,7 @@ class Player extends Sprite {
   /**
    * Update the active textures based on the new player state.
    *
-   * @param {PlayerState} state the new player state
+   * @param state The new player state
    */
   public setState(state: PlayerState) {
     if (this._state === state) return;
@@ -138,7 +134,7 @@ class Player extends Sprite {
   /**
    * Update the scale and position of the sprite to flip the texture horizontally.
    *
-   * @param {boolean} flipped whether the sprite should be flipped or not
+   * @param flipped Whether the sprite should be flipped or not
    */
   private setFlipped(flipped: boolean) {
     if (this._flipped === flipped) return;

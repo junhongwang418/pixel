@@ -1,23 +1,37 @@
 /**
  * A class to represent the keyboard key.
- * @class
- *
- * @constructor
  */
 class Key {
   private _key: string;
-  private _isDown = false;
-  private _isUp = false;
+  private _isDown: boolean;
+  private _isUp: boolean;
 
+  /**
+   * @param key String representation of the keyboard key
+   */
   constructor(key: string) {
     this._key = key;
+    this._isDown = false;
+    this._isUp = false;
   }
 
-  public setIsDown(isDown: boolean) {
+  /**
+   * Call this function `keydown` or `keyup` event is detected
+   * to update the state of the key.
+   *
+   * @param isDown Whether the key is down
+   */
+  public setIsDown(isDown: boolean): void {
     this._isDown = isDown;
   }
 
-  public setIsUp(isUp: boolean) {
+  /**
+   * Call this function `keydown` or `keyup` event is detected
+   * to update the state of the key.
+   *
+   * @param isDown Whether the key is up
+   */
+  public setIsUp(isUp: boolean): void {
     this._isUp = isUp;
   }
 
@@ -36,9 +50,6 @@ class Key {
 
 /**
  * A singleton class that represents the keyboard.
- * @class
- *
- * @constructor
  */
 class Keyboard {
   public static shared = new Keyboard();
@@ -54,7 +65,7 @@ class Keyboard {
     });
 
     window.addEventListener("keyup", (event) => {
-      // key is never null by logic
+      // key is never null because it needs to be down before up
       const key = this._keys[event.key];
       key.setIsDown(false);
       key.setIsUp(true);
@@ -62,7 +73,7 @@ class Keyboard {
   }
 
   /**
-   * Update state for current frame.
+   * Call this function every frame to update keyboard key states.
    */
   public tick(): void {
     // clear key up event
@@ -71,8 +82,9 @@ class Keyboard {
 
   /**
    * Takes the string representation of the key and returns the key object.
-   * @param {string} key
-   * @return {Key}
+   *
+   * @param key String representation of key
+   * @return Object representation of key
    */
   public getKey(key: string): Key {
     const keyObj = this._keys[key] || new Key(key);

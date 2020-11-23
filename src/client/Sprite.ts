@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import App from "./App";
 
 export enum BodyType {
   Dynamic,
@@ -6,15 +7,10 @@ export enum BodyType {
 }
 
 /**
- * A sprite class with physics.
- * @class
- *
- * @constructor
+ * A sprite class with physics and animation support.
  */
 class Sprite extends PIXI.Sprite {
-  private static readonly GRAVITY = 0.1;
-
-  private animationInterval;
+  private animationInterval: NodeJS.Timeout | null;
   private texureIndex = 0;
   protected textures: PIXI.Texture[];
   protected texturesMap: { [key: string]: PIXI.Texture[] } = {};
@@ -63,7 +59,14 @@ class Sprite extends PIXI.Sprite {
   /**
    * Stop animation
    */
-  public stop() {}
+  public stop() {
+    // already stopped
+    if (!this.animationInterval) return;
+
+    clearInterval(this.animationInterval);
+
+    this.animationInterval = null;
+  }
 
   public setHit(hit: boolean) {
     if (hit) {
@@ -76,11 +79,11 @@ class Sprite extends PIXI.Sprite {
   /**
    * Update state for current frame.
    *
-   * @param {number} deltaMs time it took to reach current frame from previous frame in milliseconds
+   * @param deltaMs Time it took to reach current frame from previous frame in milliseconds
    */
   public tick(deltaMs: number): void {
     if (this.bodyType === BodyType.Dynamic) {
-      this.vy += Sprite.GRAVITY * deltaMs;
+      this.vy += App.GRAVITY * deltaMs;
       this.x += this.vx * deltaMs;
       this.y += this.vy * deltaMs;
     }
@@ -95,7 +98,8 @@ class Sprite extends PIXI.Sprite {
 
   /**
    * Update current set of textures and reset animation frame from start.
-   * @param textures
+   *
+   * @param textures The new textures
    */
   public setTextures(textures: PIXI.Texture[]) {
     this.textures = textures;

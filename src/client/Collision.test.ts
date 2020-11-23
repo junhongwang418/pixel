@@ -42,7 +42,17 @@ test("separate two sprites in y axis when x overlap is larger", () => {
   expect(s2.y).toBe(15);
 });
 
+/**
+ * Create a sprite for unit testing.
+ *
+ * @param x The x position of the sprite from top left corner
+ * @param y The y posision of the sprite from top left corner
+ * @param width The width of the sprite from top left corner
+ * @param height The height of the sprite from top left corner
+ * @return The sprite initialized with given arguments
+ */
 function createSprite(x: number, y: number, width: number, height: number) {
+  // empty texture
   const sprite = new Sprite({});
   sprite.position.set(x, y);
   sprite.width = width;
