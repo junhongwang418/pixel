@@ -10,20 +10,19 @@ export enum BodyType {
  * A sprite class with physics and animation support.
  */
 class Sprite extends PIXI.Sprite {
-  // how fast objects fall in pixels per frame
-  public static readonly GRAVITY = 0.1;
-
   private animationInterval: NodeJS.Timeout | null;
   private texureIndex = 0;
   protected textures: PIXI.Texture[];
   protected texturesMap: { [key: string]: PIXI.Texture[] } = {};
   protected collisionBox: PIXI.Graphics;
 
+  public touchingBottom: boolean = false;
+
   // velocity
   public vx = 0;
   public vy = 0;
 
-  protected bodyType: BodyType;
+  public bodyType: BodyType;
 
   public constructor(
     texturesMap: { [key: string]: PIXI.Texture[] },
@@ -76,19 +75,6 @@ class Sprite extends PIXI.Sprite {
       this.collisionBox.tint = 0xff0000;
     } else {
       this.collisionBox.tint = 0xffffff;
-    }
-  }
-
-  /**
-   * Update state for current frame.
-   *
-   * @param deltaMs Time it took to reach current frame from previous frame in milliseconds
-   */
-  public tick(deltaMs: number): void {
-    if (this.bodyType === BodyType.Dynamic) {
-      this.vy += Sprite.GRAVITY * deltaMs;
-      this.x += this.vx * deltaMs;
-      this.y += this.vy * deltaMs;
     }
   }
 

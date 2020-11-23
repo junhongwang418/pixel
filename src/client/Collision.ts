@@ -17,6 +17,7 @@ class Collision {
    * @param {Sprite[]} tiles the static bodies
    */
   public tick(player: Player, tiles: Sprite[]) {
+    player.touchingBottom = false;
     tiles.forEach((tile) => this.separate(player, tile));
   }
 
@@ -55,6 +56,7 @@ class Collision {
       dynamicSprite.y += deltaY;
       // bounce dynamic body back in y-axis so need to reset vx
       dynamicSprite.vy = 0;
+      dynamicSprite.touchingBottom = true;
     }
   }
 

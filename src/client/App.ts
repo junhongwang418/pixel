@@ -4,6 +4,7 @@ import Player, { PlayerJson } from "./Player";
 import io from "socket.io-client";
 import Collision from "./Collision";
 import Tile from "./Tile";
+import Gravity from "./Gravity";
 
 /**
  * Entry point of PixiJS application. Call {@link App.start} to start the game.
@@ -28,6 +29,9 @@ class App {
     "assets/mrman/run_3.png",
     "assets/mrman/run_4.png",
     "assets/mrman/run_5.png",
+    "assets/mrman/jumping.png",
+    "assets/mrman/falling.png",
+    "assets/mrman/falling_touch_ground.png",
     "assets/tiles/tile_0.png",
     "assets/tiles/tile_1.png",
     "assets/tiles/tile_2.png",
@@ -98,9 +102,9 @@ class App {
       app.stage.addChild(...tiles);
 
       app.ticker.add((deltaMs) => {
-        mrman.tick(deltaMs);
-        tiles.map((tile) => tile.tick(deltaMs));
+        mrman.tick();
 
+        Gravity.shared.tick(deltaMs, [mrman]);
         Collision.shared.tick(mrman, tiles);
 
         // make the screen chase the player
