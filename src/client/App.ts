@@ -35,6 +35,11 @@ class App {
     "assets/tiles/tile_0.png",
     "assets/tiles/tile_1.png",
     "assets/tiles/tile_2.png",
+    "assets/backgrounds/grassland/0.png",
+    "assets/backgrounds/grassland/1.png",
+    "assets/backgrounds/grassland/2.png",
+    "assets/backgrounds/grassland/3.png",
+    "assets/backgrounds/grassland/4.png",
   ];
 
   /**
@@ -48,9 +53,6 @@ class App {
     // with a fallback to a canvas render. It will also setup the ticker
     // and the root stage PIXI.Container
     const app = new PIXI.Application();
-
-    // scale the application view content
-    app.stage.scale.set(4);
 
     // make the application view full screen
     app.renderer.resize(window.innerWidth, window.innerHeight);
@@ -77,27 +79,52 @@ class App {
       const socket = io();
 
       const mrman = new Player();
+
       const tiles = [];
-      for (let i = 0; i < 20; i++) {
-        const tile = new Tile();
-        tile.x = i * 16;
-        tile.y = 100;
-        tiles.push(tile);
-      }
-
-      const anotherTile = new Tile();
-      anotherTile.x = 60;
-      anotherTile.y = 100 - 16;
-      tiles.push(anotherTile);
-
-      const anotherTile2 = new Tile();
-      anotherTile2.x = 0;
-      anotherTile2.y = 100 - 16;
-      tiles.push(anotherTile2);
 
       players[socket.id] = mrman;
 
+      const background = new PIXI.Container();
+
+      let texture;
+      for (let i = 4; i >= 0; i--) {
+        texture =
+          PIXI.Loader.shared.resources[`assets/backgrounds/grassland/${i}.png`]
+            .texture;
+        const tilingSprite = new PIXI.TilingSprite(
+          texture,
+          app.renderer.width,
+          app.renderer.height
+        );
+        background.addChild(tilingSprite);
+        // scale the application view content
+        app.stage.scale.set(app.renderer.height / texture.height);
+      }
+
+      for (let i = 0; i < 40; i++) {
+        const tile = new Tile();
+        tile.x = i * 16;
+        tile.y = texture.height - 16;
+        tiles.push(tile);
+      }
+
+      for (let i = 0; i < 5; i++) {
+        const anotherTile = new Tile();
+        anotherTile.x = 0;
+        anotherTile.y = texture.height - 32 - i * 16;
+        tiles.push(anotherTile);
+      }
+
+      const anotherTile2 = new Tile();
+      anotherTile2.x = 60;
+      anotherTile2.y = texture.height - 32;
+      tiles.push(anotherTile2);
+
+      mrman.x = 16;
+      mrman.y = texture.height - 32;
+
       // add the sprite to the scene
+      app.stage.addChild(background);
       app.stage.addChild(mrman);
       app.stage.addChild(...tiles);
 
@@ -108,11 +135,36 @@ class App {
         Collision.shared.tick(mrman, tiles);
 
         // make the screen chase the player
-        app.stage.pivot.x =
-          mrman.position.x + (mrman.width / 2) * mrman.scale.x;
-        app.stage.pivot.y = mrman.position.y + mrman.height / 2;
-        app.stage.position.x = app.renderer.width / 2;
-        app.stage.position.y = app.renderer.height / 2;
+        if (mrman.center.x > app.renderer.width / 2 / app.stage.scale.x) {
+          app.stage.pivot.x = mrman.center.x;
+          app.stage.position.x = app.renderer.width / 2;
+          background.children.forEach((o, index) => {
+            const obj = o as PIXI.TilingSprite;
+            const tileOffset =
+              mrman.center.x - app.renderer.width / 2 / app.stage.scale.x;
+            obj.tilePosition.x =
+              tileOffset - index * index * tileOffset * 0.006;
+          });
+        } else {
+          app.stage.pivot.x = 0;
+          app.stage.position.x = 0;
+          background.pivot.x = 0;
+          background.children.forEach((o) => {
+            const obj = o as PIXI.TilingSprite;
+            obj.tilePosition.x = 0;
+          });
+        }
+
+        if (
+          app.renderer.height - mrman.center.y * app.stage.scale.y >
+          app.renderer.height / 2
+        ) {
+          app.stage.pivot.y = mrman.position.y + mrman.height / 2;
+          app.stage.position.y = app.renderer.height / 2;
+        } else {
+          app.stage.pivot.y = 0;
+          app.stage.position.y = 0;
+        }
 
         Keyboard.shared.tick();
         socket.emit("update", mrman.json);

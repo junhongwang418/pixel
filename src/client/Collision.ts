@@ -18,7 +18,9 @@ class Collision {
    */
   public tick(player: Player, tiles: Sprite[]) {
     player.touchingBottom = false;
-    tiles.forEach((tile) => this.separate(player, tile));
+    tiles.forEach((tile) => {
+      this.separate(player, tile);
+    });
   }
 
   /**

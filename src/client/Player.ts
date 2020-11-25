@@ -28,8 +28,8 @@ export interface PlayerJson {
  */
 class Player extends Sprite {
   private static readonly FALLING_TOUCH_GROUND_DELAY = 6;
-  private static readonly JUMP_POWER = 2;
-  private static readonly SPEED = 1;
+  private static readonly JUMP_SPEED = 2;
+  private static readonly MOVE_SPEED = 1;
 
   private state: PlayerState;
   private flipped: boolean = false;
@@ -103,17 +103,17 @@ class Player extends Sprite {
 
     if (keyW.isDown && this.canJump) {
       this.setState(PlayerState.JUMPING);
-      this.vy = -Player.JUMP_POWER;
+      this.vy = -Player.JUMP_SPEED;
     }
 
     if (keyA.isDown) {
-      this.vx = -Player.SPEED;
+      this.vx = -Player.MOVE_SPEED;
       this.setFlipped(true);
       if (this.canJump) {
         this.setState(PlayerState.RUN);
       }
     } else if (keyD.isDown) {
-      this.vx = Player.SPEED;
+      this.vx = Player.MOVE_SPEED;
       this.setFlipped(false);
       if (this.canJump) {
         this.setState(PlayerState.RUN);

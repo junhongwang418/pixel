@@ -21,8 +21,8 @@ class Sprite extends PIXI.Sprite {
 
   protected currTextures: PIXI.Texture[];
   protected texturesMap: { [key: string]: PIXI.Texture[] };
-  protected collisionBox: PIXI.Graphics;
 
+  public collisionBox: PIXI.Graphics;
   public touchingBottom = false;
   public vx = 0; // velocity x
   public vy = 0; // velocity y
@@ -41,6 +41,7 @@ class Sprite extends PIXI.Sprite {
 
     this.collisionBox = new PIXI.Graphics();
     this.collisionBox.lineStyle(0.5, 0xffffff);
+    this.collisionBox.tint = 0x00ff00;
     this.collisionBox.drawRect(0, 0, this.width, this.height);
     this.addChild(this.collisionBox);
 
