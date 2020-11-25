@@ -102,7 +102,7 @@ class App {
       app.stage.addChild(...tiles);
 
       app.ticker.add((deltaMs) => {
-        mrman.tick();
+        mrman.tick(deltaMs);
 
         Gravity.shared.tick(deltaMs, [mrman]);
         Collision.shared.tick(mrman, tiles);

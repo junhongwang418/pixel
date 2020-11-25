@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import Sprite from "./Sprite";
+import Sprite, { BodyType } from "./Sprite";
 import Keyboard from "./Keyboard";
 
 /**
@@ -27,40 +27,46 @@ export interface PlayerJson {
  * The sprite the user can control.
  */
 class Player extends Sprite {
-  private _state: PlayerState;
-  private _flipped: boolean = false;
+  private static readonly FALLING_TOUCH_GROUND_DELAY = 6;
+  private static readonly JUMP_POWER = 2;
+  private static readonly SPEED = 1;
 
-  public count = 0;
+  private state: PlayerState;
+  private flipped: boolean = false;
+
+  private currfallingTouchGroundDelay = 0;
 
   public constructor() {
-    super({
-      idle: [
-        PIXI.Loader.shared.resources["assets/mrman/idle_0.png"].texture,
-        PIXI.Loader.shared.resources["assets/mrman/idle_1.png"].texture,
-        PIXI.Loader.shared.resources["assets/mrman/idle_2.png"].texture,
-        PIXI.Loader.shared.resources["assets/mrman/idle_3.png"].texture,
-      ],
-      run: [
-        PIXI.Loader.shared.resources["assets/mrman/run_0.png"].texture,
-        PIXI.Loader.shared.resources["assets/mrman/run_1.png"].texture,
-        PIXI.Loader.shared.resources["assets/mrman/run_2.png"].texture,
-        PIXI.Loader.shared.resources["assets/mrman/run_3.png"].texture,
-        PIXI.Loader.shared.resources["assets/mrman/run_4.png"].texture,
-        PIXI.Loader.shared.resources["assets/mrman/run_5.png"].texture,
-      ],
-      jumping: [
-        PIXI.Loader.shared.resources["assets/mrman/jumping.png"].texture,
-      ],
-      falling: [
-        PIXI.Loader.shared.resources["assets/mrman/falling.png"].texture,
-      ],
-      falling_touch_ground: [
-        PIXI.Loader.shared.resources["assets/mrman/falling_touch_ground.png"]
-          .texture,
-      ],
-    });
+    super(
+      {
+        idle: [
+          PIXI.Loader.shared.resources["assets/mrman/idle_0.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/idle_1.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/idle_2.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/idle_3.png"].texture,
+        ],
+        run: [
+          PIXI.Loader.shared.resources["assets/mrman/run_0.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_1.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_2.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_3.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_4.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_5.png"].texture,
+        ],
+        jumping: [
+          PIXI.Loader.shared.resources["assets/mrman/jumping.png"].texture,
+        ],
+        falling: [
+          PIXI.Loader.shared.resources["assets/mrman/falling.png"].texture,
+        ],
+        falling_touch_ground: [
+          PIXI.Loader.shared.resources["assets/mrman/falling_touch_ground.png"]
+            .texture,
+        ],
+      },
+      BodyType.Dynamic
+    );
     this.setState(PlayerState.IDLE);
-    this.play();
   }
 
   /**
@@ -68,77 +74,53 @@ class Player extends Sprite {
    *
    * @param deltaMs Time it took to reach current frame from previous frame in milliseconds
    */
-  public tick(): void {
+  public tick(deltaMs: number): void {
     const keyA = Keyboard.shared.getKey("a");
     const keyD = Keyboard.shared.getKey("d");
     const keyW = Keyboard.shared.getKey("w");
 
-    if (this._state === PlayerState.JUMPING && this.touchingBottom) {
-      this.setState(PlayerState.FALLING_TOUCH_GROUND);
-    }
-
     if (
-      this.touchingBottom &&
-      keyW.isDown &&
-      ![
-        PlayerState.JUMPING,
-        PlayerState.FALLING,
-        PlayerState.FALLING_TOUCH_GROUND,
-      ].includes(this._state)
+      (this.state === PlayerState.JUMPING ||
+        this.state === PlayerState.FALLING) &&
+      this.touchingBottom
     ) {
-      this.setState(PlayerState.JUMPING);
-      this.vy = -2;
+      this.setState(PlayerState.FALLING_TOUCH_GROUND);
     }
 
     if (!this.touchingBottom && this.vy > 0) {
       this.setState(PlayerState.FALLING);
     }
 
-    if (this._state === PlayerState.FALLING && this.touchingBottom) {
-      this.setState(PlayerState.FALLING_TOUCH_GROUND);
-    }
-
-    if (this._state === PlayerState.FALLING_TOUCH_GROUND) {
-      this.count++;
-      if (this.count > 8) {
-        this.count %= 8;
+    if (this.state === PlayerState.FALLING_TOUCH_GROUND) {
+      this.currfallingTouchGroundDelay += deltaMs;
+      if (
+        this.currfallingTouchGroundDelay > Player.FALLING_TOUCH_GROUND_DELAY
+      ) {
+        this.currfallingTouchGroundDelay = 0;
         this.setState(PlayerState.IDLE);
       }
     }
 
+    if (keyW.isDown && this.canJump) {
+      this.setState(PlayerState.JUMPING);
+      this.vy = -Player.JUMP_POWER;
+    }
+
     if (keyA.isDown) {
-      this.vx = -1;
+      this.vx = -Player.SPEED;
       this.setFlipped(true);
-      if (
-        ![
-          PlayerState.JUMPING,
-          PlayerState.FALLING,
-          PlayerState.FALLING_TOUCH_GROUND,
-        ].includes(this._state)
-      ) {
+      if (this.canJump) {
         this.setState(PlayerState.RUN);
       }
     } else if (keyD.isDown) {
-      this.vx = 1;
+      this.vx = Player.SPEED;
       this.setFlipped(false);
-      if (
-        ![
-          PlayerState.JUMPING,
-          PlayerState.FALLING,
-          PlayerState.FALLING_TOUCH_GROUND,
-        ].includes(this._state)
-      ) {
+      if (this.canJump) {
         this.setState(PlayerState.RUN);
       }
     } else {
       this.vx = 0;
-      if (
-        ![
-          PlayerState.JUMPING,
-          PlayerState.FALLING,
-          PlayerState.FALLING_TOUCH_GROUND,
-        ].includes(this._state)
-      ) {
+      if (this.canJump) {
         this.setState(PlayerState.IDLE);
       }
     }
@@ -179,34 +161,30 @@ class Player extends Sprite {
     };
   }
 
-  public get state(): PlayerState {
-    return this._state;
-  }
-
   /**
    * Update the active textures based on the new player state.
    *
    * @param state The new player state
    */
   public setState(state: PlayerState) {
-    if (this._state === state) return;
+    if (this.state === state) return;
 
     if (state === PlayerState.IDLE) {
-      this.setTextures(this.texturesMap["idle"]);
+      this.setCurrTextures(this.texturesMap["idle"]);
     } else if (state === PlayerState.RUN) {
-      this.setTextures(this.texturesMap["run"]);
+      this.setCurrTextures(this.texturesMap["run"]);
     } else if (state === PlayerState.JUMPING) {
-      this.setTextures(this.texturesMap["jumping"]);
+      this.setCurrTextures(this.texturesMap["jumping"]);
     } else if (state === PlayerState.FALLING) {
-      this.setTextures(this.texturesMap["falling"]);
+      this.setCurrTextures(this.texturesMap["falling"]);
     } else if (state === PlayerState.FALLING_TOUCH_GROUND) {
-      this.setTextures(this.texturesMap["falling_touch_ground"]);
+      this.setCurrTextures(this.texturesMap["falling_touch_ground"]);
     } else {
       console.error(`Illegal player state ${state}`);
       return;
     }
 
-    this._state = state;
+    this.state = state;
   }
 
   /**
@@ -215,12 +193,21 @@ class Player extends Sprite {
    * @param flipped Whether the sprite should be flipped or not
    */
   private setFlipped(flipped: boolean) {
-    if (this._flipped === flipped) return;
+    if (this.flipped === flipped) return;
 
     this.scale.x *= -1;
     this.position.x -= this.scale.x * this.width;
 
-    this._flipped = flipped;
+    this.flipped = flipped;
+  }
+
+  public get canJump(): boolean {
+    const states = [
+      PlayerState.JUMPING,
+      PlayerState.FALLING,
+      PlayerState.FALLING_TOUCH_GROUND,
+    ];
+    return !states.includes(this.state);
   }
 }
 

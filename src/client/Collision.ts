@@ -13,8 +13,8 @@ class Collision {
    * Call this function every frame to make sure collision works and
    * separate dynamic bodies from static bodies.
    *
-   * @param {Player} player the dynamic body
-   * @param {Sprite[]} tiles the static bodies
+   * @param player The dynamic body
+   * @param tiles The static bodies
    */
   public tick(player: Player, tiles: Sprite[]) {
     player.touchingBottom = false;
@@ -30,8 +30,8 @@ class Collision {
    * y axis, then the dynamic sprite will be pushed back by 5 pixels in x axis to
    * avoid overlap.
    *
-   * @param dynamicSprite the movable sprite
-   * @param staticSprite the immovable sprite
+   * @param dynamicSprite The movable sprite
+   * @param staticSprite The immovable sprite
    */
   public separate(dynamicSprite: Sprite, staticSprite: Sprite): void {
     // shortcut if possible
@@ -63,9 +63,9 @@ class Collision {
   /**
    * Checks if two sprites intersect.
    *
-   * @param s1 the first sprite
-   * @param s2 the second sprite
-   * @return whether or not `s1` and `s2` intersect.
+   * @param s1 The first sprite
+   * @param s2 The second sprite
+   * @return Whether or not `s1` and `s2` intersect.
    */
   public overlap(s1: Sprite, s2: Sprite): boolean {
     return this.overlapX(s1, s2) && this.overlapY(s1, s2);
@@ -74,9 +74,9 @@ class Collision {
   /**
    * Checks if two sprites intersect in x axis.
    *
-   * @param s1 the first sprite
-   * @param s2 the second sprite
-   * @return whether or not `s1` and `s2` intersect in x axis
+   * @param s1 The first sprite
+   * @param s2 The second sprite
+   * @return Whether or not `s1` and `s2` intersect in x axis
    */
   private overlapX(s1: Sprite, s2: Sprite): boolean {
     // minimum distance from center required for separation
@@ -88,9 +88,9 @@ class Collision {
   /**
    * Checks if two sprites intersect in y axis.
    *
-   * @param s1 the first sprite
-   * @param s2 the second sprite
-   * @return whether or not `s1` and `s2` intersect in y axis
+   * @param s1 The first sprite
+   * @param s2 The second sprite
+   * @return Whether or not `s1` and `s2` intersect in y axis
    */
   private overlapY(s1: Sprite, s2: Sprite): boolean {
     // minimum distance from center required for separation

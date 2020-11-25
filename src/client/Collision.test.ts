@@ -1,4 +1,4 @@
-import Sprite from "./Sprite";
+import Sprite, { BodyType } from "./Sprite";
 import Collision from "./Collision";
 
 test("overlap returns true when two sprites intersect", () => {
@@ -53,7 +53,7 @@ test("separate two sprites in y axis when x overlap is larger", () => {
  */
 function createSprite(x: number, y: number, width: number, height: number) {
   // empty texture
-  const sprite = new Sprite({});
+  const sprite = new Sprite({}, BodyType.Static);
   sprite.position.set(x, y);
   sprite.width = width;
   sprite.height = height;
