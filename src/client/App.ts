@@ -1,10 +1,9 @@
 import * as PIXI from "pixi.js";
 import Keyboard from "./Keyboard";
-import Player, { PlayerJson } from "./Player";
-import io from "socket.io-client";
 import Collision from "./Collision";
-import Tile from "./Tile";
 import Gravity from "./Gravity";
+import Background from "./Background";
+import Foreground from "./Foreground";
 
 /**
  * Entry point of PixiJS application. Call {@link App.start} to start the game.
@@ -70,130 +69,35 @@ class App {
       console.log(`progress: ${loader.progress}%`);
     });
 
-    const players: { [id: string]: Player } = {};
-
     // callback when all the files are loaded
     loader.load(() => {
       console.log("All files loaded");
 
-      const socket = io();
+      const background = new Background(app.renderer.width);
 
-      const mrman = new Player();
+      // scale the application view content to fill the background height
+      app.stage.scale.set(app.renderer.height / background.sourceTextureHeight);
 
-      const tiles = [];
+      const viewportWidth = app.renderer.width / app.stage.scale.x;
+      const viewportHeight = app.renderer.height / app.stage.scale.y;
 
-      players[socket.id] = mrman;
+      const foreground = new Foreground(viewportHeight);
 
-      const background = new PIXI.Container();
-
-      let texture;
-      for (let i = 4; i >= 0; i--) {
-        texture =
-          PIXI.Loader.shared.resources[`assets/backgrounds/grassland/${i}.png`]
-            .texture;
-        const tilingSprite = new PIXI.TilingSprite(
-          texture,
-          app.renderer.width,
-          app.renderer.height
-        );
-        background.addChild(tilingSprite);
-        // scale the application view content
-        app.stage.scale.set(app.renderer.height / texture.height);
-      }
-
-      for (let i = 0; i < 40; i++) {
-        const tile = new Tile();
-        tile.x = i * 16;
-        tile.y = texture.height - 16;
-        tiles.push(tile);
-      }
-
-      for (let i = 0; i < 5; i++) {
-        const anotherTile = new Tile();
-        anotherTile.x = 0;
-        anotherTile.y = texture.height - 32 - i * 16;
-        tiles.push(anotherTile);
-      }
-
-      const anotherTile2 = new Tile();
-      anotherTile2.x = 60;
-      anotherTile2.y = texture.height - 32;
-      tiles.push(anotherTile2);
-
-      mrman.x = 16;
-      mrman.y = texture.height - 32;
-
-      // add the sprite to the scene
+      // The root containser contains two containers. Background container
+      // is where the background textures are stored (something you as a
+      // player can't interact with). Foreground container is where
+      // everything else is stored (game objects the player can interact
+      // with).
       app.stage.addChild(background);
-      app.stage.addChild(mrman);
-      app.stage.addChild(...tiles);
+      app.stage.addChild(foreground);
 
+      // callback to call every frame
       app.ticker.add((deltaMs) => {
-        mrman.tick(deltaMs);
-
-        Gravity.shared.tick(deltaMs, [mrman]);
-        Collision.shared.tick(mrman, tiles);
-
-        // make the screen chase the player
-        if (mrman.center.x > app.renderer.width / 2 / app.stage.scale.x) {
-          app.stage.pivot.x = mrman.center.x;
-          app.stage.position.x = app.renderer.width / 2;
-          background.children.forEach((o, index) => {
-            const obj = o as PIXI.TilingSprite;
-            const tileOffset =
-              mrman.center.x - app.renderer.width / 2 / app.stage.scale.x;
-            obj.tilePosition.x =
-              tileOffset - index * index * tileOffset * 0.006;
-          });
-        } else {
-          app.stage.pivot.x = 0;
-          app.stage.position.x = 0;
-          background.pivot.x = 0;
-          background.children.forEach((o) => {
-            const obj = o as PIXI.TilingSprite;
-            obj.tilePosition.x = 0;
-          });
-        }
-
-        if (
-          app.renderer.height - mrman.center.y * app.stage.scale.y >
-          app.renderer.height / 2
-        ) {
-          app.stage.pivot.y = mrman.position.y + mrman.height / 2;
-          app.stage.position.y = app.renderer.height / 2;
-        } else {
-          app.stage.pivot.y = 0;
-          app.stage.position.y = 0;
-        }
-
+        Gravity.shared.tick(deltaMs, [foreground.player]);
+        Collision.shared.tick(foreground.player, foreground.tiles);
+        background.tick(foreground.player, viewportWidth);
+        foreground.tick(deltaMs, viewportWidth, viewportHeight);
         Keyboard.shared.tick();
-        socket.emit("update", mrman.json);
-      });
-
-      socket.on("init", (data: { [id: string]: PlayerJson }) => {
-        Object.entries(data).forEach(([id, json]) => {
-          const player = Player.fromJson(json);
-          players[id] = player;
-          app.stage.addChild(player);
-        });
-      });
-
-      socket.on("create", (data: { id: number; json: PlayerJson }) => {
-        const { id, json } = data;
-        const player = Player.fromJson(json);
-        players[id] = player;
-        app.stage.addChild(player);
-      });
-
-      socket.on("update", (data: { id: number; json: PlayerJson }) => {
-        const { id, json } = data;
-        players[id].applyJson(json);
-      });
-
-      socket.on("delete", (data: { id: number }) => {
-        const { id } = data;
-        app.stage.removeChild(players[id]);
-        delete players[id];
       });
     });
   }
