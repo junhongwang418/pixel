@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { Howl } from "howler";
 import Player, { PlayerJson } from "./Player";
 import Tile from "./Tile";
 import io from "socket.io-client";
@@ -20,6 +21,14 @@ class Foreground extends PIXI.Container {
    */
   constructor(viewportHeight: number) {
     super();
+
+    const sound = new Howl({
+      src: ["assets/audio/background/1.wav"],
+      volume: 0.1,
+      loop: true,
+    });
+
+    sound.play();
 
     this.socket = io();
     this.player = new Player();

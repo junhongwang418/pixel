@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 import Sprite, { BodyType } from "./Sprite";
 import Keyboard from "./Keyboard";
+import { Howl } from "howler";
 
 /**
  * An enum that represents player state.
@@ -36,6 +37,9 @@ class Player extends Sprite {
 
   private currfallingTouchGroundDelay = 0;
 
+  private footstepSound: Howl;
+  private jumpSound: Howl;
+
   public constructor() {
     super(
       {
@@ -67,6 +71,18 @@ class Player extends Sprite {
       BodyType.Dynamic
     );
     this.setState(PlayerState.IDLE);
+
+    this.footstepSound = new Howl({
+      src: ["assets/audio/effect/footstep.wav"],
+      loop: true,
+      volume: 0.2,
+    });
+
+    this.jumpSound = new Howl({
+      src: ["assets/audio/effect/jump.wav"],
+      loop: false,
+      volume: 0.4,
+    });
   }
 
   /**
@@ -104,6 +120,7 @@ class Player extends Sprite {
     if (keyW.isDown && this.canJump) {
       this.setState(PlayerState.JUMPING);
       this.vy = -Player.JUMP_SPEED;
+      this.jumpSound.play();
     }
 
     if (keyA.isDown) {
@@ -123,6 +140,14 @@ class Player extends Sprite {
       if (this.canJump) {
         this.setState(PlayerState.IDLE);
       }
+    }
+
+    if (this.state === PlayerState.RUN) {
+      if (!this.footstepSound.playing()) {
+        this.footstepSound.play();
+      }
+    } else {
+      this.footstepSound.stop();
     }
   }
 
