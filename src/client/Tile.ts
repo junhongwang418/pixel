@@ -1,11 +1,21 @@
 import * as PIXI from "pixi.js";
 import Sprite, { BodyType } from "./Sprite";
 
+export enum TileType {
+  Empty,
+  Block,
+  OneWay,
+}
+
 class Tile extends Sprite {
-  constructor() {
+  public type: TileType;
+
+  constructor(id: number) {
     super(
       {
-        tile: [PIXI.Loader.shared.resources["assets/tiles/tile_0.png"].texture],
+        tile: [
+          PIXI.Loader.shared.resources[`assets/tiles/tile_${id}.png`].texture,
+        ],
       },
       BodyType.Static
     );

@@ -34,6 +34,9 @@ class App {
     "assets/tiles/tile_0.png",
     "assets/tiles/tile_1.png",
     "assets/tiles/tile_2.png",
+    "assets/tiles/tile_3.png",
+    "assets/tiles/tile_4.png",
+    "assets/tiles/tile_5.png",
     "assets/backgrounds/grassland/0.png",
     "assets/backgrounds/grassland/1.png",
     "assets/backgrounds/grassland/2.png",
@@ -94,7 +97,7 @@ class App {
       // callback to call every frame
       app.ticker.add((deltaMs) => {
         Gravity.shared.tick(deltaMs, [foreground.player]);
-        Collision.shared.tick(foreground.player, foreground.tiles);
+        Collision.shared.tick(foreground.player, foreground.tileMap.tiles);
         background.tick(foreground.player, viewportWidth);
         foreground.tick(deltaMs, viewportWidth, viewportHeight);
         Keyboard.shared.tick();

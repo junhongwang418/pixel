@@ -29,7 +29,7 @@ export interface PlayerJson {
  */
 class Player extends Sprite {
   private static readonly FALLING_TOUCH_GROUND_DELAY = 6;
-  private static readonly JUMP_SPEED = 2;
+  private static readonly JUMP_SPEED = 4;
   private static readonly MOVE_SPEED = 1;
 
   private state: PlayerState;

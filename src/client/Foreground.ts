@@ -1,15 +1,15 @@
 import * as PIXI from "pixi.js";
 import { Howl } from "howler";
 import Player, { PlayerJson } from "./Player";
-import Tile from "./Tile";
 import io from "socket.io-client";
+import TileMap from "./TileMap";
 
 /**
  * A {@link PIXI.Container} where all the game objects reside.
  */
 class Foreground extends PIXI.Container {
   public player: Player;
-  public tiles: Tile[];
+  public tileMap: TileMap;
 
   private socket: SocketIOClient.Socket;
   private players: { [id: string]: Player };
@@ -32,35 +32,17 @@ class Foreground extends PIXI.Container {
 
     this.socket = io();
     this.player = new Player();
-    this.tiles = [];
     this.players = {};
 
     this.players[this.socket.id] = this.player;
 
-    for (let i = 0; i < 40; i++) {
-      const tile = new Tile();
-      tile.x = i * 16;
-      tile.y = viewportHeight - 16;
-      this.tiles.push(tile);
-    }
-
-    for (let i = 0; i < 5; i++) {
-      const anotherTile = new Tile();
-      anotherTile.x = 0;
-      anotherTile.y = viewportHeight - 32 - i * 16;
-      this.tiles.push(anotherTile);
-    }
-
-    const anotherTile2 = new Tile();
-    anotherTile2.x = 60;
-    anotherTile2.y = viewportHeight - 32;
-    this.tiles.push(anotherTile2);
-
     this.player.x = 16;
     this.player.y = viewportHeight - 32;
 
+    this.tileMap = new TileMap();
+
+    this.addChild(this.tileMap);
     this.addChild(this.player);
-    this.addChild(...this.tiles);
 
     this.socket.on("init", (data: { [id: string]: PlayerJson }) => {
       Object.entries(data).forEach(([id, json]) => {

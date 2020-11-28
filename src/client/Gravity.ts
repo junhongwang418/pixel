@@ -6,7 +6,7 @@ import Sprite, { BodyType } from "./Sprite";
  */
 class Gravity {
   // How fast objects fall in pixels per frame
-  public static readonly G = 0.1;
+  public static readonly G = 0.2;
 
   public static shared = new Gravity();
 
