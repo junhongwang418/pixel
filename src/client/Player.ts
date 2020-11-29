@@ -2,6 +2,8 @@ import * as PIXI from "pixi.js";
 import Sprite, { BodyType } from "./Sprite";
 import Keyboard from "./Keyboard";
 import { Howl } from "howler";
+import Effect from "./Effect";
+import Foreground from "./Foreground";
 
 /**
  * An enum that represents player state.
@@ -12,6 +14,7 @@ export enum PlayerState {
   JUMPING,
   FALLING,
   FALLING_TOUCH_GROUND,
+  PUNCH,
 }
 
 /**
@@ -29,16 +32,21 @@ export interface PlayerJson {
  */
 class Player extends Sprite {
   private static readonly FALLING_TOUCH_GROUND_DELAY = 6;
-  private static readonly JUMP_SPEED = 4;
-  private static readonly MOVE_SPEED = 1;
+  private static readonly JUMP_SPEED = 240;
+  private static readonly MOVE_SPEED = 60;
+  private static readonly PUNCH_DURATION = 600;
 
   private state: PlayerState;
   private flipped: boolean = false;
 
   private currfallingTouchGroundDelay = 0;
+  private currPunchDuration = 0;
 
   private footstepSound: Howl;
   private jumpSound: Howl;
+  private punchSound: Howl;
+
+  private punchEffect: Effect;
 
   public constructor() {
     super(
@@ -67,6 +75,11 @@ class Player extends Sprite {
           PIXI.Loader.shared.resources["assets/mrman/falling_touch_ground.png"]
             .texture,
         ],
+        punch: [
+          PIXI.Loader.shared.resources["assets/mrman/punch_0.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/punch_1.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/punch_2.png"].texture,
+        ],
       },
       BodyType.Dynamic
     );
@@ -83,6 +96,16 @@ class Player extends Sprite {
       loop: false,
       volume: 0.4,
     });
+
+    this.punchSound = new Howl({
+      src: ["assets/audio/effect/punch.wav"],
+      loop: true,
+      volume: 0.3,
+    });
+
+    this.punchEffect = new Effect();
+    this.punchEffect.x = 16;
+    this.punchEffect.y = -8;
   }
 
   /**
@@ -94,6 +117,7 @@ class Player extends Sprite {
     const keyA = Keyboard.shared.getKey("a");
     const keyD = Keyboard.shared.getKey("d");
     const keyW = Keyboard.shared.getKey("w");
+    const keyJ = Keyboard.shared.getKey("j");
 
     if (
       (this.state === PlayerState.JUMPING ||
@@ -117,28 +141,45 @@ class Player extends Sprite {
       }
     }
 
-    if (keyW.isDown && this.canJump) {
-      this.setState(PlayerState.JUMPING);
-      this.vy = -Player.JUMP_SPEED;
-      this.jumpSound.play();
+    if (keyJ.isDown && this.canJump && this.state !== PlayerState.PUNCH) {
+      this.setState(PlayerState.PUNCH);
+      this.vx = 0;
+      this.addChild(this.punchEffect);
+      this.punchSound.play();
     }
 
-    if (keyA.isDown) {
-      this.vx = -Player.MOVE_SPEED;
-      this.setFlipped(true);
-      if (this.canJump) {
-        this.setState(PlayerState.RUN);
-      }
-    } else if (keyD.isDown) {
-      this.vx = Player.MOVE_SPEED;
-      this.setFlipped(false);
-      if (this.canJump) {
-        this.setState(PlayerState.RUN);
+    if (this.state === PlayerState.PUNCH) {
+      this.currPunchDuration += deltaMs;
+      if (this.currPunchDuration > Player.PUNCH_DURATION) {
+        this.currPunchDuration = 0;
+        this.setState(PlayerState.IDLE);
+        this.removeChild(this.punchEffect);
+        this.punchSound.stop();
       }
     } else {
-      this.vx = 0;
-      if (this.canJump) {
-        this.setState(PlayerState.IDLE);
+      if (keyW.isDown && this.canJump) {
+        this.setState(PlayerState.JUMPING);
+        this.vy = -Player.JUMP_SPEED;
+        this.jumpSound.play();
+      }
+
+      if (keyA.isDown) {
+        this.vx = -Player.MOVE_SPEED;
+        this.setFlipped(true);
+        if (this.canJump) {
+          this.setState(PlayerState.RUN);
+        }
+      } else if (keyD.isDown) {
+        this.vx = Player.MOVE_SPEED;
+        this.setFlipped(false);
+        if (this.canJump) {
+          this.setState(PlayerState.RUN);
+        }
+      } else {
+        this.vx = 0;
+        if (this.canJump) {
+          this.setState(PlayerState.IDLE);
+        }
       }
     }
 
@@ -149,6 +190,9 @@ class Player extends Sprite {
     } else {
       this.footstepSound.stop();
     }
+
+    this.x += (this.vx * deltaMs) / 1000;
+    this.y += (this.vy * deltaMs) / 1000;
   }
 
   /**
@@ -204,6 +248,8 @@ class Player extends Sprite {
       this.setCurrTextures(this.texturesMap["falling"]);
     } else if (state === PlayerState.FALLING_TOUCH_GROUND) {
       this.setCurrTextures(this.texturesMap["falling_touch_ground"]);
+    } else if (state === PlayerState.PUNCH) {
+      this.setCurrTextures(this.texturesMap["punch"]);
     } else {
       console.error(`Illegal player state ${state}`);
       return;

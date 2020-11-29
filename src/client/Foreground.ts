@@ -3,6 +3,7 @@ import { Howl } from "howler";
 import Player, { PlayerJson } from "./Player";
 import io from "socket.io-client";
 import TileMap from "./TileMap";
+import Effect from "./Effect";
 
 /**
  * A {@link PIXI.Container} where all the game objects reside.

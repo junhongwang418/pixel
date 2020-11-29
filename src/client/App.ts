@@ -31,6 +31,9 @@ class App {
     "assets/mrman/jumping.png",
     "assets/mrman/falling.png",
     "assets/mrman/falling_touch_ground.png",
+    "assets/mrman/punch_0.png",
+    "assets/mrman/punch_1.png",
+    "assets/mrman/punch_2.png",
     "assets/tiles/tile_0.png",
     "assets/tiles/tile_1.png",
     "assets/tiles/tile_2.png",
@@ -40,6 +43,9 @@ class App {
     "assets/backgrounds/grassland/2.png",
     "assets/backgrounds/grassland/3.png",
     "assets/backgrounds/grassland/4.png",
+    "assets/effects/punch/0.png",
+    "assets/effects/punch/1.png",
+    "assets/effects/punch/2.png",
   ];
 
   /**
@@ -93,11 +99,15 @@ class App {
       app.stage.addChild(foreground);
 
       // callback to call every frame
-      app.ticker.add((deltaMs) => {
-        Gravity.shared.tick(deltaMs, [foreground.player]);
+      app.ticker.add(() => {
+        Gravity.shared.tick(PIXI.Ticker.shared.elapsedMS, [foreground.player]);
         Collision.shared.tick(foreground.player, foreground.tileMap);
         background.tick(foreground.player, viewportWidth);
-        foreground.tick(deltaMs, viewportWidth, viewportHeight);
+        foreground.tick(
+          PIXI.Ticker.shared.elapsedMS,
+          viewportWidth,
+          viewportHeight
+        );
         Keyboard.shared.tick();
       });
     });

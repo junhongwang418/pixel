@@ -1,6 +1,5 @@
 import Player from "./Player";
 import Sprite from "./Sprite";
-import { TileType } from "./Tile";
 import TileMap from "./TileMap";
 
 /**

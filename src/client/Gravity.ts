@@ -6,7 +6,7 @@ import Sprite, { BodyType } from "./Sprite";
  */
 class Gravity {
   // How fast objects fall in pixels per frame
-  public static readonly G = 0.2;
+  public static readonly G = 0.98;
 
   public static shared = new Gravity();
 
@@ -24,8 +24,6 @@ class Gravity {
       .filter((s) => s.bodyType === BodyType.Dynamic)
       .forEach((s) => {
         s.vy += Gravity.G * deltaMs;
-        s.x += s.vx * deltaMs;
-        s.y += s.vy * deltaMs;
       });
   }
 }
