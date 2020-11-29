@@ -3,7 +3,7 @@ import Tile from "./Tile";
 
 class TileMap extends PIXI.Container {
   private data: number[][];
-  public tiles: Tile[];
+  public tiles: Tile[][];
 
   constructor() {
     super();
@@ -24,28 +24,30 @@ class TileMap extends PIXI.Container {
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ];
 
-    this.tiles = [];
-
-    for (let r = 0; r < this.data.length; r++) {
-      for (let c = 0; c < this.data[r].length; c++) {
+    this.tiles = this.data.map((row, r) =>
+      row.map((_, c) => {
         if (this.data[r][c] !== -1) {
           const tile = new Tile(this.data[r][c]);
           tile.x = c * 16;
           tile.y = r * 16;
-          this.tiles.push(tile);
+          this.addChild(tile);
+          return tile;
         }
-      }
-    }
-
-    this.addChild(...this.tiles);
+        return null;
+      })
+    );
   }
 
-  public getTileAtPoint(x: number, y: number): number {
+  public getTileAtPoint(x: number, y: number): Tile {
     return this.getTileAtPosition(Math.floor(x / 16), Math.floor(y / 16));
   }
 
-  public getTileAtPosition(tileIndexX: number, tileIndexY: number): number {
-    return this.data[tileIndexY][tileIndexX];
+  public getTileAtPosition(tileIndexX: number, tileIndexY: number): Tile {
+    if (tileIndexY < 0 || tileIndexY >= this.tiles.length) {
+      return null;
+    }
+
+    return this.tiles[tileIndexY][tileIndexX];
   }
 }
 

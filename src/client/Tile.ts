@@ -4,7 +4,6 @@ import Sprite, { BodyType } from "./Sprite";
 export enum TileType {
   Empty,
   Block,
-  OneWay,
 }
 
 class Tile extends Sprite {
@@ -19,6 +18,11 @@ class Tile extends Sprite {
       },
       BodyType.Static
     );
+    if (id === 0 || id === 1 || id === 2) {
+      this.type = TileType.Block;
+    } else {
+      this.type = TileType.Empty;
+    }
   }
 }
 

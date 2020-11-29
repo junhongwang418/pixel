@@ -97,7 +97,7 @@ class App {
       // callback to call every frame
       app.ticker.add((deltaMs) => {
         Gravity.shared.tick(deltaMs, [foreground.player]);
-        Collision.shared.tick(foreground.player, foreground.tileMap.tiles);
+        Collision.shared.tick(foreground.player, foreground.tileMap);
         background.tick(foreground.player, viewportWidth);
         foreground.tick(deltaMs, viewportWidth, viewportHeight);
         Keyboard.shared.tick();

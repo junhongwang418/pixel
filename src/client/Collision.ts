@@ -1,5 +1,7 @@
 import Player from "./Player";
 import Sprite from "./Sprite";
+import { TileType } from "./Tile";
+import TileMap from "./TileMap";
 
 /**
  * A singleton class that handles the collision detection of the game.
@@ -16,11 +18,25 @@ class Collision {
    * @param player The dynamic body
    * @param tiles The static bodies
    */
-  public tick(player: Player, tiles: Sprite[]) {
+  public tick(player: Player, tileMap: TileMap) {
+    // prevent player from going out of the world boundary
+    if (player.scale.x < 0 && player.x - player.width < 0) {
+      player.x = 16;
+    }
+
     player.touchingBottom = false;
-    tiles.forEach((tile) => {
-      this.separate(player, tile);
-    });
+    const bottomTile = tileMap.getTileAtPoint(
+      player.center.x,
+      player.y + player.height
+    );
+    if (bottomTile != null && bottomTile.type === TileType.Block) {
+      if (player.vy > 0) {
+        // falling and overlapping with ground
+        player.touchingBottom = true;
+        player.vy = 0;
+        player.y = bottomTile.y - player.height;
+      }
+    }
   }
 
   /**
