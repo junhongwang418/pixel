@@ -14,6 +14,8 @@ export enum BodyType {
  * A sprite class with physics and animation support.
  */
 class Sprite extends PIXI.Sprite {
+  public static readonly SIZE = 16;
+
   private static readonly ANIMATION_FRAME_PER_MS = 100;
 
   private animationInterval: NodeJS.Timeout | null;

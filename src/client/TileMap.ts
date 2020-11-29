@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import Sprite from "./Sprite";
 import Tile from "./Tile";
 
 class TileMap extends PIXI.Container {
@@ -28,8 +29,8 @@ class TileMap extends PIXI.Container {
       row.map((_, c) => {
         if (this.data[r][c] !== -1) {
           const tile = new Tile(this.data[r][c]);
-          tile.x = c * 16;
-          tile.y = r * 16;
+          tile.x = c * Sprite.SIZE;
+          tile.y = r * Sprite.SIZE;
           this.addChild(tile);
           return tile;
         }
@@ -39,7 +40,10 @@ class TileMap extends PIXI.Container {
   }
 
   public getTileAtPoint(x: number, y: number): Tile {
-    return this.getTileAtPosition(Math.floor(x / 16), Math.floor(y / 16));
+    return this.getTileAtPosition(
+      Math.floor(x / Sprite.SIZE),
+      Math.floor(y / Sprite.SIZE)
+    );
   }
 
   public getTileAtPosition(tileIndexX: number, tileIndexY: number): Tile {

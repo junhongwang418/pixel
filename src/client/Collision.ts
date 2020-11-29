@@ -12,24 +12,26 @@ class Collision {
   private constructor() {}
 
   /**
-   * Call this function every frame to make sure collision works and
-   * separate dynamic bodies from static bodies.
+   * Call this function every frame to make sure platformer collision works
+   * and push back the player on the ground.
    *
-   * @param player The dynamic body
-   * @param tiles The static bodies
+   * @param player The player
+   * @param tileMap The tile map of the world
    */
   public tick(player: Player, tileMap: TileMap) {
     // prevent player from going out of the world boundary
     if (player.scale.x < 0 && player.x - player.width < 0) {
-      player.x = 16;
+      player.x = Sprite.SIZE;
     }
 
     player.touchingBottom = false;
+
     const bottomTile = tileMap.getTileAtPoint(
       player.center.x,
       player.y + player.height
     );
-    if (bottomTile != null && bottomTile.type === TileType.Block) {
+
+    if (bottomTile) {
       if (player.vy > 0) {
         // falling and overlapping with ground
         player.touchingBottom = true;

@@ -1,14 +1,7 @@
 import * as PIXI from "pixi.js";
 import Sprite, { BodyType } from "./Sprite";
 
-export enum TileType {
-  Empty,
-  Block,
-}
-
 class Tile extends Sprite {
-  public type: TileType;
-
   constructor(id: number) {
     super(
       {
@@ -18,7 +11,6 @@ class Tile extends Sprite {
       },
       BodyType.Static
     );
-    this.type = TileType.Block;
   }
 }
 
