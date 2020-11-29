@@ -35,8 +35,6 @@ class App {
     "assets/tiles/tile_1.png",
     "assets/tiles/tile_2.png",
     "assets/tiles/tile_3.png",
-    "assets/tiles/tile_4.png",
-    "assets/tiles/tile_5.png",
     "assets/backgrounds/grassland/0.png",
     "assets/backgrounds/grassland/1.png",
     "assets/backgrounds/grassland/2.png",

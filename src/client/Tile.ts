@@ -18,11 +18,7 @@ class Tile extends Sprite {
       },
       BodyType.Static
     );
-    if (id === 0 || id === 1 || id === 2) {
-      this.type = TileType.Block;
-    } else {
-      this.type = TileType.Empty;
-    }
+    this.type = TileType.Block;
   }
 }
 
