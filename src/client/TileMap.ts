@@ -1,15 +1,22 @@
 import * as PIXI from "pixi.js";
-import Sprite from "./Sprite";
-import Tile from "./Tile";
+import BoundingBox from "./BoundingBox";
+
+class Tile extends PIXI.Sprite {
+  public static readonly SIZE = 16;
+
+  constructor(id: number) {
+    super(PIXI.Loader.shared.resources[`assets/tiles/tile_${id}.png`].texture);
+    BoundingBox.shared.add(this);
+  }
+}
 
 class TileMap extends PIXI.Container {
-  private data: number[][];
-  public tiles: Tile[][];
+  private tiles: (Tile | null)[][];
 
   constructor() {
     super();
 
-    this.data = [
+    const data = [
       [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
       [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
       [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -25,12 +32,12 @@ class TileMap extends PIXI.Container {
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    this.tiles = this.data.map((row, r) =>
+    this.tiles = data.map((row, r) =>
       row.map((_, c) => {
-        if (this.data[r][c] !== -1) {
-          const tile = new Tile(this.data[r][c]);
-          tile.x = c * Sprite.SIZE;
-          tile.y = r * Sprite.SIZE;
+        if (data[r][c] !== -1) {
+          const tile = new Tile(data[r][c]);
+          tile.x = c * Tile.SIZE;
+          tile.y = r * Tile.SIZE;
           this.addChild(tile);
           return tile;
         }
@@ -39,14 +46,41 @@ class TileMap extends PIXI.Container {
     );
   }
 
-  public getTileAtPoint(x: number, y: number): Tile {
+  /**
+   * Get the tile by the world coordinates.
+   *
+   * @param x X position in pixels
+   * @param y Y position in pixels
+   */
+  public getTileAtPoint(x: number, y: number): Tile | null {
     return this.getTileAtPosition(
-      Math.floor(x / Sprite.SIZE),
-      Math.floor(y / Sprite.SIZE)
+      Math.floor(x / Tile.SIZE),
+      Math.floor(y / Tile.SIZE)
     );
   }
 
-  public getTileAtPosition(tileIndexX: number, tileIndexY: number): Tile {
+  /**
+   * Get the tile by index position. The index starts from top left.
+   *
+   * ```
+   * ------------------ ...
+   * |        |
+   * | (0, 0) | (1, 0)
+   * |        |
+   * ------------------ ...
+   * |        |
+   * | (0, 1) | (1, 1)
+   * |        |
+   *
+   * ```
+   *
+   * @param tileIndexX Index in x axis
+   * @param tileIndexY Index in y axis
+   */
+  public getTileAtPosition(
+    tileIndexX: number,
+    tileIndexY: number
+  ): Tile | null {
     if (tileIndexY < 0 || tileIndexY >= this.tiles.length) {
       return null;
     }

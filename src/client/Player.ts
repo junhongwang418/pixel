@@ -1,9 +1,8 @@
 import * as PIXI from "pixi.js";
-import Sprite, { BodyType } from "./Sprite";
+import Sprite from "./Sprite";
 import Keyboard from "./Keyboard";
 import { Howl } from "howler";
 import Effect from "./Effect";
-import Foreground from "./Foreground";
 
 /**
  * An enum that represents player state.
@@ -34,10 +33,9 @@ class Player extends Sprite {
   private static readonly FALLING_TOUCH_GROUND_DELAY = 6;
   private static readonly JUMP_SPEED = 240;
   private static readonly MOVE_SPEED = 60;
-  private static readonly PUNCH_DURATION = 600;
+  private static readonly PUNCH_DURATION = 300;
 
   private state: PlayerState;
-  private flipped: boolean = false;
 
   private currfallingTouchGroundDelay = 0;
   private currPunchDuration = 0;
@@ -49,40 +47,7 @@ class Player extends Sprite {
   private punchEffect: Effect;
 
   public constructor() {
-    super(
-      {
-        idle: [
-          PIXI.Loader.shared.resources["assets/mrman/idle_0.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/idle_1.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/idle_2.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/idle_3.png"].texture,
-        ],
-        run: [
-          PIXI.Loader.shared.resources["assets/mrman/run_0.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_1.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_2.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_3.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_4.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_5.png"].texture,
-        ],
-        jumping: [
-          PIXI.Loader.shared.resources["assets/mrman/jumping.png"].texture,
-        ],
-        falling: [
-          PIXI.Loader.shared.resources["assets/mrman/falling.png"].texture,
-        ],
-        falling_touch_ground: [
-          PIXI.Loader.shared.resources["assets/mrman/falling_touch_ground.png"]
-            .texture,
-        ],
-        punch: [
-          PIXI.Loader.shared.resources["assets/mrman/punch_0.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/punch_1.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/punch_2.png"].texture,
-        ],
-      },
-      BodyType.Dynamic
-    );
+    super(Player.getTextures(PlayerState.IDLE));
     this.setState(PlayerState.IDLE);
 
     this.footstepSound = new Howl({
@@ -110,10 +75,8 @@ class Player extends Sprite {
 
   /**
    * Update state for current frame.
-   *
-   * @param deltaMs Time it took to reach current frame from previous frame in milliseconds
    */
-  public tick(deltaMs: number): void {
+  public tick(): void {
     const keyA = Keyboard.shared.getKey("a");
     const keyD = Keyboard.shared.getKey("d");
     const keyW = Keyboard.shared.getKey("w");
@@ -122,17 +85,17 @@ class Player extends Sprite {
     if (
       (this.state === PlayerState.JUMPING ||
         this.state === PlayerState.FALLING) &&
-      this.touchingBottom
+      this.onGround
     ) {
       this.setState(PlayerState.FALLING_TOUCH_GROUND);
     }
 
-    if (!this.touchingBottom && this.vy > 0) {
+    if (!this.onGround && this.vy > 0) {
       this.setState(PlayerState.FALLING);
     }
 
     if (this.state === PlayerState.FALLING_TOUCH_GROUND) {
-      this.currfallingTouchGroundDelay += deltaMs;
+      this.currfallingTouchGroundDelay += PIXI.Ticker.shared.elapsedMS;
       if (
         this.currfallingTouchGroundDelay > Player.FALLING_TOUCH_GROUND_DELAY
       ) {
@@ -149,7 +112,7 @@ class Player extends Sprite {
     }
 
     if (this.state === PlayerState.PUNCH) {
-      this.currPunchDuration += deltaMs;
+      this.currPunchDuration += PIXI.Ticker.shared.elapsedMS;
       if (this.currPunchDuration > Player.PUNCH_DURATION) {
         this.currPunchDuration = 0;
         this.setState(PlayerState.IDLE);
@@ -191,8 +154,8 @@ class Player extends Sprite {
       this.footstepSound.stop();
     }
 
-    this.x += (this.vx * deltaMs) / 1000;
-    this.y += (this.vy * deltaMs) / 1000;
+    this.x += (this.vx * PIXI.Ticker.shared.elapsedMS) / 1000;
+    this.y += (this.vy * PIXI.Ticker.shared.elapsedMS) / 1000;
   }
 
   /**
@@ -237,39 +200,8 @@ class Player extends Sprite {
    */
   public setState(state: PlayerState) {
     if (this.state === state) return;
-
-    if (state === PlayerState.IDLE) {
-      this.setCurrTextures(this.texturesMap["idle"]);
-    } else if (state === PlayerState.RUN) {
-      this.setCurrTextures(this.texturesMap["run"]);
-    } else if (state === PlayerState.JUMPING) {
-      this.setCurrTextures(this.texturesMap["jumping"]);
-    } else if (state === PlayerState.FALLING) {
-      this.setCurrTextures(this.texturesMap["falling"]);
-    } else if (state === PlayerState.FALLING_TOUCH_GROUND) {
-      this.setCurrTextures(this.texturesMap["falling_touch_ground"]);
-    } else if (state === PlayerState.PUNCH) {
-      this.setCurrTextures(this.texturesMap["punch"]);
-    } else {
-      console.error(`Illegal player state ${state}`);
-      return;
-    }
-
     this.state = state;
-  }
-
-  /**
-   * Update the scale and position of the sprite to flip the texture horizontally.
-   *
-   * @param flipped Whether the sprite should be flipped or not
-   */
-  private setFlipped(flipped: boolean) {
-    if (this.flipped === flipped) return;
-
-    this.scale.x *= -1;
-    this.position.x -= this.scale.x * this.width;
-
-    this.flipped = flipped;
+    this.setTextures(Player.getTextures(state));
   }
 
   public get canJump(): boolean {
@@ -279,6 +211,53 @@ class Player extends Sprite {
       PlayerState.FALLING_TOUCH_GROUND,
     ];
     return !states.includes(this.state);
+  }
+
+  /**
+   * Get an appropriate set of textures for a given state.
+   *
+   * @param state The player state associated with the textures
+   */
+  private static getTextures(state: PlayerState) {
+    switch (state) {
+      case PlayerState.IDLE:
+        return [
+          PIXI.Loader.shared.resources["assets/mrman/idle_0.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/idle_1.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/idle_2.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/idle_3.png"].texture,
+        ];
+      case PlayerState.RUN:
+        return [
+          PIXI.Loader.shared.resources["assets/mrman/run_0.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_1.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_2.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_3.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_4.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/run_5.png"].texture,
+        ];
+      case PlayerState.JUMPING:
+        return [
+          PIXI.Loader.shared.resources["assets/mrman/jumping.png"].texture,
+        ];
+      case PlayerState.FALLING:
+        return [
+          PIXI.Loader.shared.resources["assets/mrman/falling.png"].texture,
+        ];
+      case PlayerState.FALLING_TOUCH_GROUND:
+        return [
+          PIXI.Loader.shared.resources["assets/mrman/falling_touch_ground.png"]
+            .texture,
+        ];
+      case PlayerState.PUNCH:
+        return [
+          PIXI.Loader.shared.resources["assets/mrman/punch_0.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/punch_1.png"].texture,
+          PIXI.Loader.shared.resources["assets/mrman/punch_2.png"].texture,
+        ];
+      default:
+        return [];
+    }
   }
 }
 

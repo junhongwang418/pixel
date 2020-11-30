@@ -16,38 +16,6 @@ import Foreground from "./Foreground";
  * This is where the application initializes the game and enter the game loop.
  */
 class App {
-  // filepaths to all the textures needed for the game
-  public static readonly ASSETS = [
-    "assets/mrman/idle_0.png",
-    "assets/mrman/idle_1.png",
-    "assets/mrman/idle_2.png",
-    "assets/mrman/idle_3.png",
-    "assets/mrman/run_0.png",
-    "assets/mrman/run_1.png",
-    "assets/mrman/run_2.png",
-    "assets/mrman/run_3.png",
-    "assets/mrman/run_4.png",
-    "assets/mrman/run_5.png",
-    "assets/mrman/jumping.png",
-    "assets/mrman/falling.png",
-    "assets/mrman/falling_touch_ground.png",
-    "assets/mrman/punch_0.png",
-    "assets/mrman/punch_1.png",
-    "assets/mrman/punch_2.png",
-    "assets/tiles/tile_0.png",
-    "assets/tiles/tile_1.png",
-    "assets/tiles/tile_2.png",
-    "assets/tiles/tile_3.png",
-    "assets/backgrounds/grassland/0.png",
-    "assets/backgrounds/grassland/1.png",
-    "assets/backgrounds/grassland/2.png",
-    "assets/backgrounds/grassland/3.png",
-    "assets/backgrounds/grassland/4.png",
-    "assets/effects/punch/0.png",
-    "assets/effects/punch/1.png",
-    "assets/effects/punch/2.png",
-  ];
-
   /**
    * Initialize the game and enter the game loop.
    */
@@ -70,7 +38,36 @@ class App {
     const loader = PIXI.Loader.shared;
 
     // load all the textures of the game
-    loader.add(App.ASSETS);
+    loader.add([
+      "assets/mrman/idle_0.png",
+      "assets/mrman/idle_1.png",
+      "assets/mrman/idle_2.png",
+      "assets/mrman/idle_3.png",
+      "assets/mrman/run_0.png",
+      "assets/mrman/run_1.png",
+      "assets/mrman/run_2.png",
+      "assets/mrman/run_3.png",
+      "assets/mrman/run_4.png",
+      "assets/mrman/run_5.png",
+      "assets/mrman/jumping.png",
+      "assets/mrman/falling.png",
+      "assets/mrman/falling_touch_ground.png",
+      "assets/mrman/punch_0.png",
+      "assets/mrman/punch_1.png",
+      "assets/mrman/punch_2.png",
+      "assets/tiles/tile_0.png",
+      "assets/tiles/tile_1.png",
+      "assets/tiles/tile_2.png",
+      "assets/tiles/tile_3.png",
+      "assets/backgrounds/grassland/0.png",
+      "assets/backgrounds/grassland/1.png",
+      "assets/backgrounds/grassland/2.png",
+      "assets/backgrounds/grassland/3.png",
+      "assets/backgrounds/grassland/4.png",
+      "assets/effects/punch/0.png",
+      "assets/effects/punch/1.png",
+      "assets/effects/punch/2.png",
+    ]);
 
     loader.onProgress.add((loader) => {
       console.log(`progress: ${loader.progress}%`);
@@ -100,14 +97,10 @@ class App {
 
       // callback to call every frame
       app.ticker.add(() => {
-        Gravity.shared.tick(PIXI.Ticker.shared.elapsedMS, [foreground.player]);
+        Gravity.shared.tick([foreground.player]);
         Collision.shared.tick(foreground.player, foreground.tileMap);
         background.tick(foreground.player, viewportWidth);
-        foreground.tick(
-          PIXI.Ticker.shared.elapsedMS,
-          viewportWidth,
-          viewportHeight
-        );
+        foreground.tick(viewportWidth, viewportHeight);
         Keyboard.shared.tick();
       });
     });

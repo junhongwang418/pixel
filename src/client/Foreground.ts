@@ -76,12 +76,11 @@ class Foreground extends PIXI.Container {
    * Call this method every frame to update all the game objects in the foreground
    * including the container itself.
    *
-   * @param deltaMs Elapsed time since last frame in milliseconds
    * @param viewportWidth Width of the screen
    * @param viewportHeight Height of the screen
    */
-  public tick(deltaMs: number, viewportWidth: number, viewportHeight: number) {
-    this.player.tick(deltaMs);
+  public tick(viewportWidth: number, viewportHeight: number) {
+    this.player.tick();
 
     // make the screen chase the player
     if (this.player.center.x > viewportWidth / 2) {

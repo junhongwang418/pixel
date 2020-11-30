@@ -17,22 +17,18 @@ class Background extends PIXI.Container {
    * 0 and 4 (inclusive), which represents the depth. Texture with higher
    * depth is drawn earlier.
    *
-   * @param width Width of the world
+   * @param width Width of the entire background
    */
   constructor(width: number) {
     super();
 
-    const texture =
-      PIXI.Loader.shared.resources[`assets/backgrounds/grassland/0.png`]
-        .texture;
+    const texture = this.getTexture(0);
     this.sourceTextureWidth = texture.width;
     this.sourceTextureHeight = texture.height;
 
     this.tilingSprites = [];
     for (let i = 0; i <= 4; i++) {
-      const texture =
-        PIXI.Loader.shared.resources[`assets/backgrounds/grassland/${i}.png`]
-          .texture;
+      const texture = this.getTexture(i);
       this.tilingSprites.push(
         new PIXI.TilingSprite(texture, width, this.sourceTextureHeight)
       );
@@ -52,17 +48,24 @@ class Background extends PIXI.Container {
    * @param viewportWidth Width of the screen
    */
   public tick(player: Player, viewportWidth: number) {
+    // check if the player is near the left world boundary
     if (player.center.x > viewportWidth / 2) {
       this.tilingSprites
         .slice()
         .reverse()
         .forEach((ts, index) => {
           ts.tilePosition.x =
-            -(player.center.x - viewportWidth / 2) * index * index * 0.01;
+            -1 * (player.center.x - viewportWidth / 2) * index * index * 0.01;
         });
     } else {
       this.tilingSprites.forEach((s) => (s.tilePosition.x = 0));
     }
+  }
+
+  private getTexture(id: number) {
+    return PIXI.Loader.shared.resources[
+      `assets/backgrounds/grassland/${id}.png`
+    ].texture;
   }
 }
 

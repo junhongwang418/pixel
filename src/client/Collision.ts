@@ -23,7 +23,7 @@ class Collision {
       player.x = Sprite.SIZE;
     }
 
-    player.touchingBottom = false;
+    player.onGround = false;
 
     const bottomTile = tileMap.getTileAtPoint(
       player.center.x,
@@ -33,7 +33,7 @@ class Collision {
     if (bottomTile) {
       if (player.vy > 0) {
         // falling and overlapping with ground
-        player.touchingBottom = true;
+        player.onGround = true;
         player.vy = 0;
         player.y = bottomTile.y - player.height;
       }
@@ -75,7 +75,7 @@ class Collision {
       dynamicSprite.y += deltaY;
       // bounce dynamic body back in y-axis so need to reset vx
       dynamicSprite.vy = 0;
-      dynamicSprite.touchingBottom = true;
+      dynamicSprite.onGround = true;
     }
   }
 

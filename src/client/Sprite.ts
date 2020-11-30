@@ -1,14 +1,5 @@
 import * as PIXI from "pixi.js";
-
-/**
- * A {@link Sprite} body is either {@link BodyType.Dynamic} or {@link BodyType.Static}.
- * Use dynamic bodies to be pulled down by gravity. Use static bodies to ignore gravity
- * but interact with dynamic bodies.
- */
-export enum BodyType {
-  Dynamic,
-  Static,
-}
+import BoundingBox from "./BoundingBox";
 
 /**
  * A sprite class with physics and animation support.
@@ -21,51 +12,36 @@ class Sprite extends PIXI.Sprite {
   private animationInterval: NodeJS.Timeout | null;
   private animationIndex = 0;
 
-  protected currTextures: PIXI.Texture[];
-  protected texturesMap: { [key: string]: PIXI.Texture[] };
+  protected textures: PIXI.Texture[];
+  protected flipped: boolean = false;
 
-  public collisionBox: PIXI.Graphics;
-  public touchingBottom = false;
-  public vx = 0; // velocity x
-  public vy = 0; // velocity y
-  public bodyType: BodyType;
+  public onGround = false;
+  public vx = 0; // velocity in x axis in pixels per second
+  public vy = 0; // Velocity in y axis in pixels per second
 
-  public constructor(
-    texturesMap: { [key: string]: PIXI.Texture[] },
-    bodyType: BodyType
-  ) {
+  public constructor(textures?: PIXI.Texture[]) {
     super();
-
-    this.texturesMap = texturesMap;
-    this.currTextures = Object.values(texturesMap)[0] || [];
-    this.texture = this.currTextures[0];
-    this.bodyType = bodyType;
-
-    this.collisionBox = new PIXI.Graphics();
-    this.collisionBox.lineStyle(0.5, 0xffffff);
-    this.collisionBox.tint = 0x00ff00;
-    this.collisionBox.drawRect(0, 0, this.width, this.height);
-    this.addChild(this.collisionBox);
-
+    this.textures = textures || [];
+    this.texture = this.textures[0];
     this.play();
+    BoundingBox.shared.add(this);
   }
 
   /**
-   * Start animation
+   * Start the animation
    */
   public play() {
     // already animating
     if (this.animationInterval) return;
 
     this.animationInterval = setInterval(() => {
-      this.animationIndex =
-        (this.animationIndex + 1) % this.currTextures.length;
-      this.texture = this.currTextures[this.animationIndex];
+      this.animationIndex = (this.animationIndex + 1) % this.textures.length;
+      this.texture = this.textures[this.animationIndex];
     }, Sprite.ANIMATION_FRAME_PER_MS);
   }
 
   /**
-   * Stop animation
+   * Stop the animation
    */
   public stop() {
     // already stopped
@@ -77,9 +53,29 @@ class Sprite extends PIXI.Sprite {
   }
 
   public get center(): { x: number; y: number } {
+    const b = this.bounds;
     return {
-      x: this.x + (this.width / 2) * this.scale.x,
-      y: this.y + (this.height / 2) * this.scale.y,
+      x: b.x + b.width / 2,
+      y: b.y + b.height / 2,
+    };
+  }
+
+  /**
+   * Get the bounds of the sprite where the `x` and `y` are
+   * the top left corner of the sprite. The `x` is different
+   * from the default one when the sprite is flipped.
+   */
+  public get bounds(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } {
+    return {
+      x: this.x + (this.flipped ? -this.width : 0),
+      y: this.y,
+      width: this.width,
+      height: this.height,
     };
   }
 
@@ -88,9 +84,23 @@ class Sprite extends PIXI.Sprite {
    *
    * @param textures The new textures
    */
-  public setCurrTextures(textures: PIXI.Texture[]) {
-    this.currTextures = textures;
+  public setTextures(textures: PIXI.Texture[]) {
+    this.textures = textures;
     this.animationIndex = 0;
+  }
+
+  /**
+   * Update the scale and position of the sprite to flip the texture horizontally.
+   *
+   * @param flipped Whether the sprite should be flipped or not
+   */
+  protected setFlipped(flipped: boolean) {
+    if (this.flipped === flipped) return;
+
+    this.scale.x *= -1;
+    this.position.x -= this.scale.x * this.width;
+
+    this.flipped = flipped;
   }
 }
 

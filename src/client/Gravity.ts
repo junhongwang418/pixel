@@ -1,30 +1,28 @@
-import Sprite, { BodyType } from "./Sprite";
+import * as PIXI from "pixi.js";
+import Sprite from "./Sprite";
 
 /**
  * A singleton class that handles the gravity of the game.
  * Call {@link Gravity.tick} every frame to enable gravity.
  */
 class Gravity {
-  // How fast objects fall in pixels per frame
-  public static readonly G = 0.98;
+  // The downward acceleration per second
+  public static readonly G = 1024;
 
   public static shared = new Gravity();
 
   private constructor() {}
 
   /**
-   * Call this method every frame to pull down all dynamic bodies
-   * in the game.
+   * Call this method every frame to pull down the player
+   * and enemies in the game.
    *
-   * @param deltaMs The time it has passed since last frame in milliseconds
-   * @param sprites All the sprites in the game
+   * @param sprites The sprites to apply the gravity
    */
-  public tick(deltaMs: number, sprites: Sprite[]) {
-    sprites
-      .filter((s) => s.bodyType === BodyType.Dynamic)
-      .forEach((s) => {
-        s.vy += Gravity.G * deltaMs;
-      });
+  public tick(sprites: Sprite[]) {
+    sprites.forEach((s) => {
+      s.vy += (Gravity.G * PIXI.Ticker.shared.elapsedMS) / 1000;
+    });
   }
 }
 
