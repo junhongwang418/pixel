@@ -77,72 +77,63 @@ class Player extends Sprite {
    * Update state for current frame.
    */
   public tick(): void {
+    super.tick();
+
     const keyA = Keyboard.shared.getKey("a");
     const keyD = Keyboard.shared.getKey("d");
     const keyW = Keyboard.shared.getKey("w");
     const keyJ = Keyboard.shared.getKey("j");
 
-    if (
-      (this.state === PlayerState.JUMPING ||
-        this.state === PlayerState.FALLING) &&
-      this.onGround
-    ) {
-      this.setState(PlayerState.FALLING_TOUCH_GROUND);
-    }
-
-    if (!this.onGround && this.vy > 0) {
-      this.setState(PlayerState.FALLING);
-    }
-
     if (this.state === PlayerState.FALLING_TOUCH_GROUND) {
       this.currfallingTouchGroundDelay += PIXI.Ticker.shared.elapsedMS;
       if (
-        this.currfallingTouchGroundDelay > Player.FALLING_TOUCH_GROUND_DELAY
+        this.currfallingTouchGroundDelay < Player.FALLING_TOUCH_GROUND_DELAY
       ) {
-        this.currfallingTouchGroundDelay = 0;
-        this.setState(PlayerState.IDLE);
+        return;
       }
-    }
-
-    if (keyJ.isDown && this.canJump && this.state !== PlayerState.PUNCH) {
-      this.setState(PlayerState.PUNCH);
-      this.vx = 0;
-      this.addChild(this.punchEffect);
-      this.punchSound.play();
+      this.currfallingTouchGroundDelay = 0;
     }
 
     if (this.state === PlayerState.PUNCH) {
       this.currPunchDuration += PIXI.Ticker.shared.elapsedMS;
-      if (this.currPunchDuration > Player.PUNCH_DURATION) {
-        this.currPunchDuration = 0;
-        this.setState(PlayerState.IDLE);
-        this.removeChild(this.punchEffect);
-        this.punchSound.stop();
+      if (this.currPunchDuration < Player.PUNCH_DURATION) {
+        return;
       }
+      this.currPunchDuration = 0;
+      this.removeChild(this.punchEffect);
+      this.punchSound.stop();
+    }
+
+    if (keyA.isDown) {
+      this.vx = -Player.MOVE_SPEED;
+      this.setFlipped(true);
+    } else if (keyD.isDown) {
+      this.vx = Player.MOVE_SPEED;
+      this.setFlipped(false);
     } else {
-      if (keyW.isDown && this.canJump) {
+      this.vx = 0;
+    }
+
+    if (this.onGround) {
+      if ([PlayerState.JUMPING, PlayerState.FALLING].includes(this.state)) {
+        this.setState(PlayerState.FALLING_TOUCH_GROUND);
+      } else if (keyJ.isDown) {
+        this.setState(PlayerState.PUNCH);
+        this.vx = 0;
+        this.addChild(this.punchEffect);
+        this.punchSound.play();
+      } else if (keyW.isDown) {
         this.setState(PlayerState.JUMPING);
         this.vy = -Player.JUMP_SPEED;
         this.jumpSound.play();
-      }
-
-      if (keyA.isDown) {
-        this.vx = -Player.MOVE_SPEED;
-        this.setFlipped(true);
-        if (this.canJump) {
-          this.setState(PlayerState.RUN);
-        }
-      } else if (keyD.isDown) {
-        this.vx = Player.MOVE_SPEED;
-        this.setFlipped(false);
-        if (this.canJump) {
-          this.setState(PlayerState.RUN);
-        }
+      } else if (keyA.isDown || keyD.isDown) {
+        this.setState(PlayerState.RUN);
       } else {
-        this.vx = 0;
-        if (this.canJump) {
-          this.setState(PlayerState.IDLE);
-        }
+        this.setState(PlayerState.IDLE);
+      }
+    } else {
+      if (this.vy > 0) {
+        this.setState(PlayerState.FALLING);
       }
     }
 
@@ -153,9 +144,6 @@ class Player extends Sprite {
     } else {
       this.footstepSound.stop();
     }
-
-    this.x += (this.vx * PIXI.Ticker.shared.elapsedMS) / 1000;
-    this.y += (this.vy * PIXI.Ticker.shared.elapsedMS) / 1000;
   }
 
   /**
@@ -200,17 +188,9 @@ class Player extends Sprite {
    */
   public setState(state: PlayerState) {
     if (this.state === state) return;
+
     this.state = state;
     this.setTextures(Player.getTextures(state));
-  }
-
-  public get canJump(): boolean {
-    const states = [
-      PlayerState.JUMPING,
-      PlayerState.FALLING,
-      PlayerState.FALLING_TOUCH_GROUND,
-    ];
-    return !states.includes(this.state);
   }
 
   /**

@@ -27,6 +27,11 @@ class Sprite extends PIXI.Sprite {
     BoundingBox.shared.add(this);
   }
 
+  public tick() {
+    this.x += (this.vx * PIXI.Ticker.shared.elapsedMS) / 1000;
+    this.y += (this.vy * PIXI.Ticker.shared.elapsedMS) / 1000;
+  }
+
   /**
    * Start the animation
    */
