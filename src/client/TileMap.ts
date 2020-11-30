@@ -1,6 +1,46 @@
 import * as PIXI from "pixi.js";
 import BoundingBox from "./BoundingBox";
 
+interface TileMapData {
+  compressionlevel: number;
+  height: number;
+  infinite: boolean;
+  layers: {
+    data: number[];
+    height: number;
+    id: number;
+    name: string;
+    opacity: number;
+    type: string;
+    visible: boolean;
+    width: number;
+    x: number;
+    y: number;
+  }[];
+  nextlayerid: number;
+  nextobjectid: number;
+  orientation: string;
+  renderorder: string;
+  tileversion: string;
+  tileheight: number;
+  tilesets: {
+    columns: number;
+    firstgid: number;
+    image: string;
+    imageheight: number;
+    imagewidth: number;
+    margin: number;
+    spacing: number;
+    tilecount: number;
+    tileheight: number;
+    tilewidth: number;
+  }[];
+  tilewidth: number;
+  type: string;
+  version: number;
+  width: number;
+}
+
 class Tile extends PIXI.Sprite {
   public static readonly SIZE = 16;
 
@@ -16,34 +56,29 @@ class TileMap extends PIXI.Container {
   constructor() {
     super();
 
-    const data = [
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, 1, 2, 2, 2, 3, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, 1, 2, 2, 2, 3, -1, -1, -1, -1, -1, -1, -1, -1],
-      [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ];
+    const tileMapData = PIXI.Loader.shared.resources["assets/map/map.json"]
+      .data as TileMapData;
 
-    this.tiles = data.map((row, r) =>
-      row.map((_, c) => {
-        if (data[r][c] !== -1) {
-          const tile = new Tile(data[r][c]);
-          tile.x = c * Tile.SIZE;
-          tile.y = r * Tile.SIZE;
+    const height = tileMapData.layers[0].height;
+    const width = tileMapData.layers[0].width;
+    const data = tileMapData.layers[0].data;
+
+    this.tiles = new Array(height);
+    for (let i = 0; i < this.tiles.length; i++) {
+      this.tiles[i] = new Array(width);
+      for (let j = 0; j < this.tiles[i].length; j++) {
+        const tileId = data[i * width + j];
+        if (tileId > 0) {
+          const tile = new Tile(tileId);
+          tile.x = j * Tile.SIZE;
+          tile.y = i * Tile.SIZE;
           this.addChild(tile);
-          return tile;
+          this.tiles[i][j] = tile;
+        } else {
+          this.tiles[i][j] = null;
         }
-        return null;
-      })
-    );
+      }
+    }
   }
 
   /**

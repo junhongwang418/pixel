@@ -55,10 +55,10 @@ class App {
       "assets/mrman/punch_0.png",
       "assets/mrman/punch_1.png",
       "assets/mrman/punch_2.png",
-      "assets/tiles/tile_0.png",
       "assets/tiles/tile_1.png",
       "assets/tiles/tile_2.png",
       "assets/tiles/tile_3.png",
+      "assets/tiles/tile_4.png",
       "assets/backgrounds/grassland/0.png",
       "assets/backgrounds/grassland/1.png",
       "assets/backgrounds/grassland/2.png",
@@ -67,6 +67,7 @@ class App {
       "assets/effects/punch/0.png",
       "assets/effects/punch/1.png",
       "assets/effects/punch/2.png",
+      "assets/map/map.json",
     ]);
 
     loader.onProgress.add((loader) => {
