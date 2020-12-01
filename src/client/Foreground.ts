@@ -3,13 +3,14 @@ import { Howl } from "howler";
 import Player, { PlayerJson } from "./Player";
 import io from "socket.io-client";
 import TileMap from "./TileMap";
-import Effect from "./Effect";
+import Enemy from "./Enemy";
 
 /**
  * A {@link PIXI.Container} where all the game objects reside.
  */
 class Foreground extends PIXI.Container {
   public player: Player;
+  public enemies: Enemy[];
   public tileMap: TileMap;
 
   private socket: SocketIOClient.Socket;
@@ -43,6 +44,17 @@ class Foreground extends PIXI.Container {
     this.tileMap = new TileMap();
 
     this.addChild(this.tileMap);
+
+    // create enemies
+    this.enemies = [];
+    for (let i = 0; i < 5; i++) {
+      const randomX = 100 + Math.random() * 300;
+      const enemy = new Enemy();
+      enemy.x = randomX;
+      this.enemies.push(enemy);
+    }
+    this.addChild(...this.enemies);
+
     this.addChild(this.player);
 
     this.socket.on("init", (data: { [id: string]: PlayerJson }) => {
@@ -81,6 +93,7 @@ class Foreground extends PIXI.Container {
    */
   public tick(viewportWidth: number, viewportHeight: number) {
     this.player.tick();
+    this.enemies.forEach((enemy) => enemy.tick());
 
     // make the screen chase the player
     if (this.player.center.x > viewportWidth / 2) {

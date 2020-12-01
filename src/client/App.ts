@@ -67,6 +67,8 @@ class App {
       "assets/effects/punch/0.png",
       "assets/effects/punch/1.png",
       "assets/effects/punch/2.png",
+      "assets/bub/idle_0.png",
+      "assets/bub/idle_1.png",
       "assets/map/map.json",
     ]);
 
@@ -98,8 +100,11 @@ class App {
 
       // callback to call every frame
       app.ticker.add(() => {
-        Gravity.shared.tick([foreground.player]);
-        Collision.shared.tick(foreground.player, foreground.tileMap);
+        Gravity.shared.tick([foreground.player, ...foreground.enemies]);
+        Collision.shared.tick(
+          [foreground.player, ...foreground.enemies],
+          foreground.tileMap
+        );
         background.tick(foreground.player, viewportWidth);
         foreground.tick(viewportWidth, viewportHeight);
         Keyboard.shared.tick();

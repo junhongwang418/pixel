@@ -36,7 +36,6 @@
     "express": "^4.17.1",
     "howler": "^2.2.1",
     "http": "0.0.1-security",
-    "pixi-sound": "^3.0.5",
     "pixi.js": "^5.3.3",
     "socket.io": "^3.0.3",
     "socket.io-client": "^3.0.0"

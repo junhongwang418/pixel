@@ -7,13 +7,12 @@ import BoundingBox from "./BoundingBox";
 class Sprite extends PIXI.Sprite {
   public static readonly SIZE = 16;
 
-  private static readonly ANIMATION_FRAME_PER_MS = 100;
-
   private animationInterval: NodeJS.Timeout | null;
   private animationIndex = 0;
 
   protected textures: PIXI.Texture[];
   protected flipped: boolean = false;
+  protected animationIntervalMS = 100;
 
   public onGround = false;
   public vx = 0; // velocity in x axis in pixels per second
@@ -42,7 +41,7 @@ class Sprite extends PIXI.Sprite {
     this.animationInterval = setInterval(() => {
       this.animationIndex = (this.animationIndex + 1) % this.textures.length;
       this.texture = this.textures[this.animationIndex];
-    }, Sprite.ANIMATION_FRAME_PER_MS);
+    }, this.animationIntervalMS);
   }
 
   /**
@@ -106,6 +105,12 @@ class Sprite extends PIXI.Sprite {
     this.position.x -= this.scale.x * this.width;
 
     this.flipped = flipped;
+  }
+
+  protected setAnimationIntervalMS(ms: number) {
+    this.animationIntervalMS = ms;
+    this.stop();
+    this.play();
   }
 }
 
