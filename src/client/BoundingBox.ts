@@ -1,5 +1,4 @@
 import * as PIXI from "pixi.js";
-import Sprite from "./Sprite";
 
 /**
  * A singleton class that handles drawing bounding boxes around sprites

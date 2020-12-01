@@ -100,7 +100,6 @@ class Player extends Sprite {
         return;
       }
       this.currPunchDuration = 0;
-      this.removeChild(this.punchEffect);
       this.punchSound.stop();
     }
 
@@ -120,7 +119,6 @@ class Player extends Sprite {
       } else if (keyJ.isDown) {
         this.setState(PlayerState.PUNCH);
         this.vx = 0;
-        this.addChild(this.punchEffect);
         this.punchSound.play();
       } else if (keyW.isDown) {
         this.setState(PlayerState.JUMPING);
@@ -191,6 +189,11 @@ class Player extends Sprite {
 
     this.state = state;
     this.setTextures(Player.getTextures(state));
+    if (state === PlayerState.PUNCH) {
+      this.addChild(this.punchEffect);
+    } else {
+      this.removeChild(this.punchEffect);
+    }
   }
 
   /**
