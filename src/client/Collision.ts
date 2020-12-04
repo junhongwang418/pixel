@@ -20,7 +20,7 @@ class Collision {
    */
   public tick(sprites: Sprite[], tileMap: TileMap) {
     sprites.forEach((s) => {
-      // prevent player from going out of the world boundary
+      // prevent the sprite from going out of the world boundary
       if (s.scale.x < 0 && s.x - s.width < 0) {
         s.x = Sprite.SIZE;
       }

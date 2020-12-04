@@ -69,6 +69,12 @@ class App {
       "assets/effects/punch/2.png",
       "assets/bub/idle_0.png",
       "assets/bub/idle_1.png",
+      "assets/bub/run_0.png",
+      "assets/bub/run_1.png",
+      "assets/bub/run_2.png",
+      "assets/bub/run_3.png",
+      "assets/bub/run_4.png",
+      "assets/bub/run_5.png",
       "assets/map/map.json",
     ]);
 
