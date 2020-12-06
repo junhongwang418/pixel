@@ -48,45 +48,6 @@ class Collision {
   }
 
   /**
-   * If a dynamic body intersects with a static body in both x and y axises,
-   * then it separates them by either pushing back the dynamic body in x or y axis,
-   * whichever takes less movement.
-   *
-   * For example, if two sprites are overlapped by 5 pixels in x axis, 10 pixels in
-   * y axis, then the dynamic sprite will be pushed back by 5 pixels in x axis to
-   * avoid overlap.
-   *
-   * @param dynamicSprite The movable sprite
-   * @param staticSprite The immovable sprite
-   */
-  public separate(dynamicSprite: Sprite, staticSprite: Sprite): void {
-    // shortcut if possible
-    if (!this.overlap(dynamicSprite, staticSprite)) return;
-
-    const minDistanceX = dynamicSprite.width / 2 + staticSprite.width / 2;
-    const diffX = staticSprite.center.x - dynamicSprite.center.x;
-
-    const minDistanceY = dynamicSprite.height / 2 + staticSprite.height / 2;
-    const diffY = staticSprite.center.y - dynamicSprite.center.y;
-
-    // amount to move dynamic body to avoid overlap
-    const deltaX = diffX > 0 ? diffX - minDistanceX : diffX + minDistanceX;
-    const deltaY = diffY > 0 ? diffY - minDistanceY : diffY + minDistanceY;
-
-    // choose direction that takes less movement
-    if (Math.abs(deltaX) < Math.abs(deltaY)) {
-      dynamicSprite.x += deltaX;
-      // bounce dynamic body back in x-axis so need to reset vx
-      dynamicSprite.vx = 0;
-    } else {
-      dynamicSprite.y += deltaY;
-      // bounce dynamic body back in y-axis so need to reset vx
-      dynamicSprite.vy = 0;
-      dynamicSprite.onGround = true;
-    }
-  }
-
-  /**
    * Checks if two sprites intersect.
    *
    * @param s1 The first sprite

@@ -25,7 +25,7 @@ class Foreground extends PIXI.Container {
     super();
 
     const sound = new Howl({
-      src: ["assets/audio/background/1.wav"],
+      src: ["assets/sound/background/1.wav"],
       volume: 0.1,
       loop: true,
     });

@@ -1,7 +1,6 @@
 import * as PIXI from "pixi.js";
 import Sprite from "./Sprite";
 import Keyboard from "./Keyboard";
-import { Howl } from "howler";
 import Effect from "./Effect";
 import Enemy from "./Enemy";
 import TextureManager from "./TextureManager";
