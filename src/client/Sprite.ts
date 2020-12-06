@@ -11,7 +11,9 @@ class Sprite extends PIXI.Sprite {
   private animationIndex = 0;
 
   protected textures: PIXI.Texture[];
+
   protected flipped: boolean = false;
+
   protected animationIntervalMS = 100;
 
   public onGround = false;

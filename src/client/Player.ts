@@ -3,6 +3,9 @@ import Sprite from "./Sprite";
 import Keyboard from "./Keyboard";
 import { Howl } from "howler";
 import Effect from "./Effect";
+import Enemy from "./Enemy";
+import TextureManager from "./TextureManager";
+import SoundManager from "./SoundManager";
 
 /**
  * An enum that represents player state.
@@ -14,6 +17,7 @@ export enum PlayerState {
   FALLING,
   FALLING_TOUCH_GROUND,
   PUNCH,
+  HURT,
 }
 
 /**
@@ -30,43 +34,28 @@ export interface PlayerJson {
  * The sprite the user can control.
  */
 class Player extends Sprite {
-  private static readonly FALLING_TOUCH_GROUND_DELAY = 6;
+  private static readonly LANDING_DURATION = 100;
   private static readonly JUMP_SPEED = 240;
   private static readonly MOVE_SPEED = 60;
   private static readonly PUNCH_DURATION = 300;
+  private static readonly BLINK_DURATION = 2000;
+  private static readonly BLINK_INTERVAL = 60;
+  private static readonly HURT_IMPACT_X = 30;
+  private static readonly HURT_IMPACT_Y = 100;
 
   private state: PlayerState;
 
-  private currfallingTouchGroundDelay = 0;
-  private currPunchDuration = 0;
-
-  private footstepSound: Howl;
-  private jumpSound: Howl;
-  private punchSound: Howl;
+  private landingElapsedMS = 0;
+  private punchElapsedMS = 0;
+  private blinkElapsedMS = 0;
 
   private punchEffect: Effect;
+
+  private blinkInterval: NodeJS.Timeout;
 
   public constructor() {
     super(Player.getTextures(PlayerState.IDLE));
     this.setState(PlayerState.IDLE);
-
-    this.footstepSound = new Howl({
-      src: ["assets/audio/effect/footstep.wav"],
-      loop: true,
-      volume: 0.2,
-    });
-
-    this.jumpSound = new Howl({
-      src: ["assets/audio/effect/jump.wav"],
-      loop: false,
-      volume: 0.4,
-    });
-
-    this.punchSound = new Howl({
-      src: ["assets/audio/effect/punch.wav"],
-      loop: true,
-      volume: 0.3,
-    });
 
     this.punchEffect = new Effect();
     this.punchEffect.x = 16;
@@ -84,23 +73,28 @@ class Player extends Sprite {
     const keyW = Keyboard.shared.getKey("w");
     const keyJ = Keyboard.shared.getKey("j");
 
+    if (
+      (this.state === PlayerState.HURT && !this.onGround) ||
+      (this.onGround && this.vy < 0)
+    ) {
+      return;
+    }
+
     if (this.state === PlayerState.FALLING_TOUCH_GROUND) {
-      this.currfallingTouchGroundDelay += PIXI.Ticker.shared.elapsedMS;
-      if (
-        this.currfallingTouchGroundDelay < Player.FALLING_TOUCH_GROUND_DELAY
-      ) {
+      this.landingElapsedMS += PIXI.Ticker.shared.elapsedMS;
+      if (this.landingElapsedMS < Player.LANDING_DURATION) {
         return;
       }
-      this.currfallingTouchGroundDelay = 0;
+      this.landingElapsedMS = 0;
     }
 
     if (this.state === PlayerState.PUNCH) {
-      this.currPunchDuration += PIXI.Ticker.shared.elapsedMS;
-      if (this.currPunchDuration < Player.PUNCH_DURATION) {
+      this.punchElapsedMS += PIXI.Ticker.shared.elapsedMS;
+      if (this.punchElapsedMS < Player.PUNCH_DURATION) {
         return;
       }
-      this.currPunchDuration = 0;
-      this.punchSound.stop();
+      this.punchElapsedMS = 0;
+      SoundManager.shared.punch.stop();
     }
 
     if (keyA.isDown) {
@@ -119,11 +113,11 @@ class Player extends Sprite {
       } else if (keyJ.isDown) {
         this.setState(PlayerState.PUNCH);
         this.vx = 0;
-        this.punchSound.play();
+        SoundManager.shared.punch.play();
       } else if (keyW.isDown) {
         this.setState(PlayerState.JUMPING);
         this.vy = -Player.JUMP_SPEED;
-        this.jumpSound.play();
+        SoundManager.shared.jump.play();
       } else if (keyA.isDown || keyD.isDown) {
         this.setState(PlayerState.RUN);
       } else {
@@ -136,11 +130,11 @@ class Player extends Sprite {
     }
 
     if (this.state === PlayerState.RUN) {
-      if (!this.footstepSound.playing()) {
-        this.footstepSound.play();
+      if (!SoundManager.shared.footstep.playing()) {
+        SoundManager.shared.footstep.play();
       }
     } else {
-      this.footstepSound.stop();
+      SoundManager.shared.footstep.stop();
     }
   }
 
@@ -189,10 +183,32 @@ class Player extends Sprite {
 
     this.state = state;
     this.setTextures(Player.getTextures(state));
+
     if (state === PlayerState.PUNCH) {
       this.addChild(this.punchEffect);
     } else {
       this.removeChild(this.punchEffect);
+    }
+  }
+
+  /**
+   * Receives damage from enemy and gets knocked back.
+   *
+   * @param enemy The enemy to receive the damage from
+   * @param direction The knockback direction. `1` is right. `-1` is left.
+   */
+  public hurt(enemy: Enemy, direction: 1 | -1) {
+    if (this.blinking) {
+      return;
+    }
+
+    this.setState(PlayerState.HURT);
+    this.vy = -Player.HURT_IMPACT_Y;
+    this.vx = direction * Player.HURT_IMPACT_X;
+    this.blink();
+    SoundManager.shared.hurt.play();
+    if (SoundManager.shared.punch.playing()) {
+      SoundManager.shared.punch.stop();
     }
   }
 
@@ -204,43 +220,48 @@ class Player extends Sprite {
   private static getTextures(state: PlayerState) {
     switch (state) {
       case PlayerState.IDLE:
-        return [
-          PIXI.Loader.shared.resources["assets/mrman/idle_0.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/idle_1.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/idle_2.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/idle_3.png"].texture,
-        ];
+        return TextureManager.shared.getMrManIdleTextures();
       case PlayerState.RUN:
-        return [
-          PIXI.Loader.shared.resources["assets/mrman/run_0.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_1.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_2.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_3.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_4.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/run_5.png"].texture,
-        ];
+        return TextureManager.shared.getMrManRunTextures();
       case PlayerState.JUMPING:
-        return [
-          PIXI.Loader.shared.resources["assets/mrman/jumping.png"].texture,
-        ];
+        return TextureManager.shared.getMrManJumpingTextures();
       case PlayerState.FALLING:
-        return [
-          PIXI.Loader.shared.resources["assets/mrman/falling.png"].texture,
-        ];
+        return TextureManager.shared.getMrManFallingTextures();
       case PlayerState.FALLING_TOUCH_GROUND:
-        return [
-          PIXI.Loader.shared.resources["assets/mrman/falling_touch_ground.png"]
-            .texture,
-        ];
+        return TextureManager.shared.getMrManFallingTouchGroundTextures();
       case PlayerState.PUNCH:
-        return [
-          PIXI.Loader.shared.resources["assets/mrman/punch_0.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/punch_1.png"].texture,
-          PIXI.Loader.shared.resources["assets/mrman/punch_2.png"].texture,
-        ];
+        return TextureManager.shared.getMrManPunchTextures();
+      case PlayerState.HURT:
+        return TextureManager.shared.getMrManHurtTextures();
       default:
         return [];
     }
+  }
+
+  /**
+   * Flicker the sprite for a while. Flash the player when it receives
+   * a damage to indicate that the player is invincible for a certain
+   * period.
+   */
+  private blink() {
+    // already blinking
+    if (this.blinkInterval) {
+      return;
+    }
+
+    this.blinkInterval = setInterval(() => {
+      this.alpha = this.alpha ? 0 : 1;
+    }, Player.BLINK_INTERVAL);
+
+    setTimeout(() => {
+      clearInterval(this.blinkInterval);
+      this.blinkInterval = null;
+      this.alpha = 1;
+    }, Player.BLINK_DURATION);
+  }
+
+  public get blinking() {
+    return this.blinkInterval != null;
   }
 }
 

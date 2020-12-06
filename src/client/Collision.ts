@@ -18,24 +18,31 @@ class Collision {
    * @param sprites The sprites to apply the collision
    * @param tileMap The tile map of the world
    */
-  public tick(sprites: Sprite[], tileMap: TileMap) {
+  public tick(player: Player, enemies: Enemy[], tileMap: TileMap) {
+    const sprites = [player, ...enemies];
+
     sprites.forEach((s) => {
       // prevent the sprite from going out of the world boundary
       if (s.scale.x < 0 && s.x - s.width < 0) {
         s.x = Sprite.SIZE;
       }
 
+      // reset on ground
       s.onGround = false;
 
       const bottomTile = tileMap.getTileAtPoint(s.center.x, s.y + s.height);
 
-      if (bottomTile) {
-        if (s.vy > 0) {
-          // falling and overlapping with ground
-          s.onGround = true;
-          s.vy = 0;
-          s.y = bottomTile.y - s.height;
-        }
+      // falling and overlapping with ground
+      if (bottomTile && s.vy > 0) {
+        s.onGround = true;
+        s.vy = 0;
+        s.y = bottomTile.y - s.height;
+      }
+    });
+
+    enemies.forEach((e) => {
+      if (Collision.shared.overlap(player, e)) {
+        player.hurt(e, player.center.x < e.center.x ? -1 : 1);
       }
     });
   }

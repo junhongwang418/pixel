@@ -32,7 +32,7 @@ class Enemy extends Sprite {
       if (this.state === EnemyState.Idle) {
         this.vx = 0;
       } else if (this.state === EnemyState.Run) {
-        this.vx = Enemy.MOVE_SPEED * (this.flipped ? 1 : -1);
+        this.vx = Enemy.MOVE_SPEED * (this.flipped ? -1 : 1);
       }
     }
 
@@ -59,17 +59,17 @@ class Enemy extends Sprite {
     switch (state) {
       case EnemyState.Idle:
         return [
-          PIXI.Loader.shared.resources[`assets/bub/idle_0.png`].texture,
-          PIXI.Loader.shared.resources[`assets/bub/idle_1.png`].texture,
+          PIXI.Loader.shared.resources[`assets/sprites/bub/idle_0.png`].texture,
+          PIXI.Loader.shared.resources[`assets/sprites/bub/idle_1.png`].texture,
         ];
       case EnemyState.Run:
         return [
-          PIXI.Loader.shared.resources[`assets/bub/run_0.png`].texture,
-          PIXI.Loader.shared.resources[`assets/bub/run_1.png`].texture,
-          PIXI.Loader.shared.resources[`assets/bub/run_2.png`].texture,
-          PIXI.Loader.shared.resources[`assets/bub/run_3.png`].texture,
-          PIXI.Loader.shared.resources[`assets/bub/run_4.png`].texture,
-          PIXI.Loader.shared.resources[`assets/bub/run_5.png`].texture,
+          PIXI.Loader.shared.resources[`assets/sprites/bub/run_0.png`].texture,
+          PIXI.Loader.shared.resources[`assets/sprites/bub/run_1.png`].texture,
+          PIXI.Loader.shared.resources[`assets/sprites/bub/run_2.png`].texture,
+          PIXI.Loader.shared.resources[`assets/sprites/bub/run_3.png`].texture,
+          PIXI.Loader.shared.resources[`assets/sprites/bub/run_4.png`].texture,
+          PIXI.Loader.shared.resources[`assets/sprites/bub/run_5.png`].texture,
         ];
       default:
         return [];

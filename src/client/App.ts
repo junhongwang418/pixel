@@ -4,6 +4,7 @@ import Collision from "./Collision";
 import Gravity from "./Gravity";
 import Background from "./Background";
 import Foreground from "./Foreground";
+import TextureManager from "./TextureManager";
 
 /**
  * Entry point of PixiJS application. Call {@link App.start} to start the game.
@@ -38,45 +39,8 @@ class App {
     const loader = PIXI.Loader.shared;
 
     // load all the textures of the game
-    loader.add([
-      "assets/mrman/idle_0.png",
-      "assets/mrman/idle_1.png",
-      "assets/mrman/idle_2.png",
-      "assets/mrman/idle_3.png",
-      "assets/mrman/run_0.png",
-      "assets/mrman/run_1.png",
-      "assets/mrman/run_2.png",
-      "assets/mrman/run_3.png",
-      "assets/mrman/run_4.png",
-      "assets/mrman/run_5.png",
-      "assets/mrman/jumping.png",
-      "assets/mrman/falling.png",
-      "assets/mrman/falling_touch_ground.png",
-      "assets/mrman/punch_0.png",
-      "assets/mrman/punch_1.png",
-      "assets/mrman/punch_2.png",
-      "assets/tiles/tile_1.png",
-      "assets/tiles/tile_2.png",
-      "assets/tiles/tile_3.png",
-      "assets/tiles/tile_4.png",
-      "assets/backgrounds/grassland/0.png",
-      "assets/backgrounds/grassland/1.png",
-      "assets/backgrounds/grassland/2.png",
-      "assets/backgrounds/grassland/3.png",
-      "assets/backgrounds/grassland/4.png",
-      "assets/effects/punch/0.png",
-      "assets/effects/punch/1.png",
-      "assets/effects/punch/2.png",
-      "assets/bub/idle_0.png",
-      "assets/bub/idle_1.png",
-      "assets/bub/run_0.png",
-      "assets/bub/run_1.png",
-      "assets/bub/run_2.png",
-      "assets/bub/run_3.png",
-      "assets/bub/run_4.png",
-      "assets/bub/run_5.png",
-      "assets/map/map.json",
-    ]);
+    TextureManager.shared.init();
+    loader.add("assets/map/map.json");
 
     loader.onProgress.add((loader) => {
       console.log(`progress: ${loader.progress}%`);
@@ -108,7 +72,8 @@ class App {
       app.ticker.add(() => {
         Gravity.shared.tick([foreground.player, ...foreground.enemies]);
         Collision.shared.tick(
-          [foreground.player, ...foreground.enemies],
+          foreground.player,
+          foreground.enemies,
           foreground.tileMap
         );
         background.tick(foreground.player, viewportWidth);
