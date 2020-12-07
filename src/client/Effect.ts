@@ -1,13 +1,11 @@
-import * as PIXI from "pixi.js";
 import Sprite from "./Sprite";
+import TextureManager from "./TextureManager";
 
 class Effect extends Sprite {
-  constructor() {
-    super([
-      PIXI.Loader.shared.resources[`assets/effects/punch/0.png`].texture,
-      PIXI.Loader.shared.resources[`assets/effects/punch/1.png`].texture,
-      PIXI.Loader.shared.resources[`assets/effects/punch/2.png`].texture,
-    ]);
+  constructor(x: number, y: number) {
+    super(TextureManager.shared.getPunchEffectTextures());
+    this.x = x;
+    this.y = y;
   }
 }
 

@@ -70,10 +70,10 @@ class App {
 
       // callback to call every frame
       app.ticker.add(() => {
-        Gravity.shared.tick([foreground.player, ...foreground.enemies]);
+        Gravity.shared.tick([foreground.player]);
         Collision.shared.tick(
           foreground.player,
-          foreground.enemies,
+          Object.values(foreground.enemies),
           foreground.tileMap
         );
         background.tick(foreground.player, viewportWidth);

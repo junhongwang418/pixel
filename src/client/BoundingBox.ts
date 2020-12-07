@@ -20,6 +20,13 @@ class BoundingBox {
     box.tint = 0x00ff00;
     box.drawRect(0, 0, sprite.width, sprite.height);
     sprite.addChild(box);
+
+    // draw pivot point
+    const circle = new PIXI.Graphics();
+    circle.lineStyle(0.5, 0xffffff);
+    circle.tint = 0xff0000;
+    circle.drawCircle(0, 0, 1);
+    sprite.addChild(circle);
   }
 }
 

@@ -23,7 +23,7 @@ class SoundManager {
 
     this.punch = new Howl({
       src: ["assets/sound/effect/punch.wav"],
-      loop: true,
+      loop: false,
       volume: 0.3,
     });
 

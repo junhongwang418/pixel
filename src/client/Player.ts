@@ -5,29 +5,7 @@ import Effect from "./Effect";
 import Enemy from "./Enemy";
 import TextureManager from "./TextureManager";
 import SoundManager from "./SoundManager";
-
-/**
- * An enum that represents player state.
- */
-export enum PlayerState {
-  IDLE,
-  RUN,
-  JUMPING,
-  FALLING,
-  FALLING_TOUCH_GROUND,
-  PUNCH,
-  HURT,
-}
-
-/**
- * The json representation of the player data. The data is used to synchronize the players across all the client sockets.
- */
-export interface PlayerJson {
-  x: number;
-  y: number;
-  state: PlayerState;
-  scaleX: number;
-}
+import { PlayerJson, PlayerState } from "../server/Player";
 
 /**
  * The sprite the user can control.
@@ -36,7 +14,7 @@ class Player extends Sprite {
   private static readonly LANDING_DURATION = 100;
   private static readonly JUMP_SPEED = 240;
   private static readonly MOVE_SPEED = 60;
-  private static readonly PUNCH_DURATION = 300;
+  private static readonly PUNCH_DURATION = 200;
   private static readonly BLINK_DURATION = 2000;
   private static readonly BLINK_INTERVAL = 60;
   private static readonly HURT_IMPACT_X = 30;
@@ -44,21 +22,21 @@ class Player extends Sprite {
 
   private state: PlayerState;
 
-  private landingElapsedMS = 0;
-  private punchElapsedMS = 0;
-  private blinkElapsedMS = 0;
+  private landingElapsedMS: number;
+  private punchElapsedMS: number;
 
   private punchEffect: Effect;
 
-  private blinkInterval: NodeJS.Timeout;
+  private blinkInterval: NodeJS.Timeout | null;
 
   public constructor() {
-    super(Player.getTextures(PlayerState.IDLE));
-    this.setState(PlayerState.IDLE);
-
-    this.punchEffect = new Effect();
-    this.punchEffect.x = 16;
-    this.punchEffect.y = -8;
+    super(Player.getTextures(PlayerState.Idle));
+    this.setState(PlayerState.Idle);
+    this.landingElapsedMS = 0;
+    this.punchElapsedMS = 0;
+    // position relative to player
+    this.punchEffect = new Effect(16, -8);
+    this.blinkInterval = null;
   }
 
   /**
@@ -67,35 +45,38 @@ class Player extends Sprite {
   public tick(): void {
     super.tick();
 
+    this.landingElapsedMS += PIXI.Ticker.shared.elapsedMS;
+    this.punchElapsedMS += PIXI.Ticker.shared.elapsedMS;
+
+    if (this.state === PlayerState.Hurt) {
+      // in the air or just gets hurt
+      if (!this.onGround || this.vy < 0) {
+        return;
+      }
+    }
+
+    // landing motion
+    if (
+      this.state === PlayerState.Landing &&
+      this.landingElapsedMS < Player.LANDING_DURATION
+    ) {
+      return;
+    }
+
+    // punching motion
+    if (
+      this.state === PlayerState.Punch &&
+      this.punchElapsedMS < Player.PUNCH_DURATION
+    ) {
+      return;
+    }
+
     const keyA = Keyboard.shared.getKey("a");
     const keyD = Keyboard.shared.getKey("d");
     const keyW = Keyboard.shared.getKey("w");
     const keyJ = Keyboard.shared.getKey("j");
 
-    if (
-      (this.state === PlayerState.HURT && !this.onGround) ||
-      (this.onGround && this.vy < 0)
-    ) {
-      return;
-    }
-
-    if (this.state === PlayerState.FALLING_TOUCH_GROUND) {
-      this.landingElapsedMS += PIXI.Ticker.shared.elapsedMS;
-      if (this.landingElapsedMS < Player.LANDING_DURATION) {
-        return;
-      }
-      this.landingElapsedMS = 0;
-    }
-
-    if (this.state === PlayerState.PUNCH) {
-      this.punchElapsedMS += PIXI.Ticker.shared.elapsedMS;
-      if (this.punchElapsedMS < Player.PUNCH_DURATION) {
-        return;
-      }
-      this.punchElapsedMS = 0;
-      SoundManager.shared.punch.stop();
-    }
-
+    // update velocity
     if (keyA.isDown) {
       this.vx = -Player.MOVE_SPEED;
       this.setFlipped(true);
@@ -106,34 +87,23 @@ class Player extends Sprite {
       this.vx = 0;
     }
 
+    // update state
     if (this.onGround) {
-      if ([PlayerState.JUMPING, PlayerState.FALLING].includes(this.state)) {
-        this.setState(PlayerState.FALLING_TOUCH_GROUND);
+      if ([PlayerState.Jumping, PlayerState.Falling].includes(this.state)) {
+        this.setState(PlayerState.Landing);
       } else if (keyJ.isDown) {
-        this.setState(PlayerState.PUNCH);
-        this.vx = 0;
-        SoundManager.shared.punch.play();
+        this.setState(PlayerState.Punch);
       } else if (keyW.isDown) {
-        this.setState(PlayerState.JUMPING);
-        this.vy = -Player.JUMP_SPEED;
-        SoundManager.shared.jump.play();
+        this.setState(PlayerState.Jumping);
       } else if (keyA.isDown || keyD.isDown) {
-        this.setState(PlayerState.RUN);
+        this.setState(PlayerState.Run);
       } else {
-        this.setState(PlayerState.IDLE);
+        this.setState(PlayerState.Idle);
       }
     } else {
       if (this.vy > 0) {
-        this.setState(PlayerState.FALLING);
+        this.setState(PlayerState.Falling);
       }
-    }
-
-    if (this.state === PlayerState.RUN) {
-      if (!SoundManager.shared.footstep.playing()) {
-        SoundManager.shared.footstep.play();
-      }
-    } else {
-      SoundManager.shared.footstep.stop();
     }
   }
 
@@ -143,10 +113,30 @@ class Player extends Sprite {
    * @param {PlayerJson} json Properties to apply
    */
   public applyJson(json: PlayerJson): void {
-    const { x, y, state, scaleX } = json;
+    const {
+      x,
+      y,
+      width,
+      height,
+      vx,
+      vy,
+      state,
+      scaleX,
+      onGround,
+      blinking,
+    } = json;
     this.position.set(x, y);
+    this.width = width;
+    this.height = height;
+    this.vx = vx;
+    this.vy = vy;
     this.scale.x = scaleX;
     this.setState(state);
+    this.onGround = onGround;
+
+    if (!this.blinking && blinking) {
+      this.blink();
+    }
   }
 
   /**
@@ -167,13 +157,19 @@ class Player extends Sprite {
     return {
       x: this.x,
       y: this.y,
+      width: this.width,
+      height: this.height,
+      vx: this.vx,
+      vy: this.vy,
       state: this.state,
       scaleX: this.scale.x,
+      onGround: this.onGround,
+      blinking: this.blinking,
     };
   }
 
   /**
-   * Update the active textures based on the new player state.
+   * Update the player properties based on the new state.
    *
    * @param state The new player state
    */
@@ -183,10 +179,27 @@ class Player extends Sprite {
     this.state = state;
     this.setTextures(Player.getTextures(state));
 
-    if (state === PlayerState.PUNCH) {
+    if (state === PlayerState.Punch) {
       this.addChild(this.punchEffect);
     } else {
       this.removeChild(this.punchEffect);
+    }
+
+    if (state === PlayerState.Run) {
+      SoundManager.shared.footstep.play();
+    } else {
+      SoundManager.shared.footstep.stop();
+    }
+
+    if (state === PlayerState.Landing) {
+      this.landingElapsedMS = 0;
+    } else if (state === PlayerState.Punch) {
+      this.vx = 0;
+      SoundManager.shared.punch.play();
+      this.punchElapsedMS = 0;
+    } else if (state === PlayerState.Jumping) {
+      this.vy = -Player.JUMP_SPEED;
+      SoundManager.shared.jump.play();
     }
   }
 
@@ -201,14 +214,11 @@ class Player extends Sprite {
       return;
     }
 
-    this.setState(PlayerState.HURT);
+    this.setState(PlayerState.Hurt);
     this.vy = -Player.HURT_IMPACT_Y;
     this.vx = direction * Player.HURT_IMPACT_X;
     this.blink();
     SoundManager.shared.hurt.play();
-    if (SoundManager.shared.punch.playing()) {
-      SoundManager.shared.punch.stop();
-    }
   }
 
   /**
@@ -218,19 +228,19 @@ class Player extends Sprite {
    */
   private static getTextures(state: PlayerState) {
     switch (state) {
-      case PlayerState.IDLE:
+      case PlayerState.Idle:
         return TextureManager.shared.getMrManIdleTextures();
-      case PlayerState.RUN:
+      case PlayerState.Run:
         return TextureManager.shared.getMrManRunTextures();
-      case PlayerState.JUMPING:
+      case PlayerState.Jumping:
         return TextureManager.shared.getMrManJumpingTextures();
-      case PlayerState.FALLING:
+      case PlayerState.Falling:
         return TextureManager.shared.getMrManFallingTextures();
-      case PlayerState.FALLING_TOUCH_GROUND:
+      case PlayerState.Landing:
         return TextureManager.shared.getMrManFallingTouchGroundTextures();
-      case PlayerState.PUNCH:
+      case PlayerState.Punch:
         return TextureManager.shared.getMrManPunchTextures();
-      case PlayerState.HURT:
+      case PlayerState.Hurt:
         return TextureManager.shared.getMrManHurtTextures();
       default:
         return [];

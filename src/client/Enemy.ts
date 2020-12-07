@@ -1,46 +1,14 @@
 import * as PIXI from "pixi.js";
-import Random from "./Random";
 import Sprite from "./Sprite";
-
-enum EnemyState {
-  Idle,
-  Run,
-}
+import { EnemyState, EnemyJson } from "../server/Enemy";
 
 class Enemy extends Sprite {
-  private static readonly MOVE_SPEED = 30;
-
   private state: EnemyState;
-
-  private timeUntilNextAction: number;
 
   constructor() {
     super(Enemy.getTextures(EnemyState.Idle));
     this.state = EnemyState.Idle;
     this.setAnimationIntervalMS(128);
-    this.resetNextActionTime();
-  }
-
-  public tick() {
-    super.tick();
-
-    if (this.timeUntilNextAction < 0) {
-      this.resetNextActionTime();
-      this.setFlipped(Random.choice([true, false]));
-      this.setState(Random.choice([EnemyState.Idle, EnemyState.Run]));
-
-      if (this.state === EnemyState.Idle) {
-        this.vx = 0;
-      } else if (this.state === EnemyState.Run) {
-        this.vx = Enemy.MOVE_SPEED * (this.flipped ? -1 : 1);
-      }
-    }
-
-    this.timeUntilNextAction -= PIXI.Ticker.shared.elapsedMS;
-  }
-
-  public resetNextActionTime() {
-    this.timeUntilNextAction = Math.random() * 3000;
   }
 
   /**
@@ -50,9 +18,51 @@ class Enemy extends Sprite {
    */
   public setState(state: EnemyState) {
     if (this.state === state) return;
-
     this.state = state;
     this.setTextures(Enemy.getTextures(state));
+  }
+
+  /**
+   * Apply all the properties specified in the json.
+   *
+   * @param {EnemyJson} json Properties to apply
+   */
+  public applyJson(json: EnemyJson): void {
+    const { x, y, vx, vy, state, scaleX, onGround } = json;
+    this.position.set(x, y);
+    this.vx = vx;
+    this.vy = vy;
+    this.scale.x = scaleX;
+    this.setState(state);
+    this.onGround = onGround;
+  }
+
+  /**
+   * Construct an enemy object based on the json.
+   *
+   * @param json Properties to initialize the player
+   */
+  public static fromJson(json: EnemyJson): Enemy {
+    const enemy = new Enemy();
+    enemy.applyJson(json);
+    return enemy;
+  }
+
+  /**
+   * Get a json representing current state of the enemy.
+   */
+  public get json(): EnemyJson {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+      vx: this.vx,
+      vy: this.vy,
+      state: this.state,
+      scaleX: this.scale.x,
+      onGround: this.onGround,
+    };
   }
 
   private static getTextures(state: EnemyState) {

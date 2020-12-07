@@ -12,8 +12,6 @@ class Sprite extends PIXI.Sprite {
 
   protected textures: PIXI.Texture[];
 
-  protected flipped: boolean = false;
-
   protected animationIntervalMS = 100;
 
   public onGround = false;
@@ -105,14 +103,16 @@ class Sprite extends PIXI.Sprite {
 
     this.scale.x *= -1;
     this.position.x -= this.scale.x * this.width;
-
-    this.flipped = flipped;
   }
 
   protected setAnimationIntervalMS(ms: number) {
     this.animationIntervalMS = ms;
     this.stop();
     this.play();
+  }
+
+  protected get flipped() {
+    return this.scale.x < 0;
   }
 }
 

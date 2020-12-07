@@ -16,7 +16,7 @@ class TextureManager {
     loader.add(this.getMrManRunTextureFilePaths());
     loader.add(this.getMrManJumpingTextureFilePaths());
     loader.add(this.getMrManFallingTextureFilePaths());
-    loader.add(this.getMrManFallingTouchGroundTextureFilePaths());
+    loader.add(this.getMrManLandingTextureFilePaths());
     loader.add(this.getMrManPunchTextureFilePaths());
     loader.add(this.getMrManHurtTextureFilePaths());
     loader.add(this.getTileTextureFilePaths());
@@ -43,7 +43,7 @@ class TextureManager {
   }
 
   public getMrManFallingTouchGroundTextures() {
-    return this.getTextures(this.getMrManFallingTouchGroundTextureFilePaths());
+    return this.getTextures(this.getMrManLandingTextureFilePaths());
   }
 
   public getMrManPunchTextures() {
@@ -110,8 +110,8 @@ class TextureManager {
     return ["assets/sprites/mrman/falling.png"];
   }
 
-  private getMrManFallingTouchGroundTextureFilePaths() {
-    return ["assets/sprites/mrman/falling_touch_ground.png"];
+  private getMrManLandingTextureFilePaths() {
+    return ["assets/sprites/mrman/landing.png"];
   }
 
   private getMrManPunchTextureFilePaths() {

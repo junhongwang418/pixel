@@ -1,7 +1,11 @@
 import express from "express";
 import http from "http";
 import SocketIO from "socket.io";
-import { PlayerJson } from "../client/Player";
+import { v4 as uuidv4 } from "uuid";
+import Gravity from "./Gravity";
+import Collision from "./Collision";
+import Player, { PlayerJson } from "./Player";
+import Enemy from "./Enemy";
 
 const app = express();
 const server = http.createServer(app);
@@ -12,21 +16,44 @@ const port = process.env.PORT || 3000;
 app.use(express.static("dist/client"));
 app.use("/docs", express.static("dist/docs"));
 
-const players: { [id: string]: PlayerJson } = {};
+const players: { [id: string]: Player } = {};
+const enemies: { [id: string]: Enemy } = {};
+
+// create enemies
+for (let i = 0; i < 10; i++) {
+  const randomX = 100 + Math.random() * 300;
+  const enemy = new Enemy(randomX);
+  enemy.x = randomX;
+  enemies[uuidv4()] = enemy;
+}
+
+setInterval(() => {
+  Gravity.shared.tick(enemies);
+  Collision.shared.tick(enemies);
+  Object.values(enemies).forEach((e) => e.tick());
+}, 16.66);
 
 io.on("connection", (socket) => {
-  socket.emit("init", players);
+  const playerJsons = {};
+  Object.entries(players).forEach(
+    ([id, player]) => (playerJsons[id] = player.json())
+  );
 
-  players[socket.id] = {
-    x: 0,
-    y: 0,
-    state: 0,
-    scaleX: 1,
-  };
+  const enemyJsons = {};
+  Object.entries(enemies).forEach(
+    ([id, enemy]) => (enemyJsons[id] = enemy.json())
+  );
+
+  socket.emit("init", {
+    players: playerJsons,
+    enemies: enemyJsons,
+  });
+
+  players[socket.id] = new Player();
 
   socket.broadcast.emit("create", {
     id: socket.id,
-    json: players[socket.id],
+    json: players[socket.id].json(),
   });
 
   socket.on("disconnect", () => {
@@ -36,14 +63,22 @@ io.on("connection", (socket) => {
     delete players[socket.id];
   });
 
-  socket.on("update", (json: PlayerJson) => {
-    players[socket.id] = json;
+  socket.on("update-player", (json: PlayerJson) => {
+    players[socket.id].applyJson(json);
 
-    socket.broadcast.emit("update", {
+    socket.broadcast.emit("update-player", {
       id: socket.id,
-      json: players[socket.id],
+      json,
     });
   });
+
+  setInterval(() => {
+    const enemyJsons = {};
+    Object.entries(enemies).forEach(
+      ([id, enemy]) => (enemyJsons[id] = enemy.json())
+    );
+    socket.emit("update-enemies", enemyJsons);
+  }, 16.66);
 });
 
 server.listen(port, () => {
