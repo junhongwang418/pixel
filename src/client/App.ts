@@ -5,82 +5,118 @@ import Gravity from "./Gravity";
 import Background from "./Background";
 import Foreground from "./Foreground";
 import TextureManager from "./TextureManager";
+import JsonManager from "./JsonManager";
+import SoundManager from "./SoundManager";
 
 /**
- * Entry point of PixiJS application. Call {@link App.start} to start the game.
- *
- * ```typescript
- * const app = new App();
- * app.start();
- * ```
- *
- * This is where the application initializes the game and enter the game loop.
+ * Entry point of PixiJS application. Instantiate {@link App} to
+ * initializes the game and enter the game loop.
  */
 class App {
+  private app: PIXI.Application;
+  private background: Background;
+  private foreground: Foreground;
+
   /**
-   * Initialize the game and enter the game loop.
+   * Initialize the game and enter the game loop automatically.
    */
-  public start(): void {
-    // Disable interpolation when scaling, will make texture be pixelated
+  constructor() {
+    // Disable interpolation when scaling because all the textures
+    // in this game are pixelart.
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
     // The application will create a renderer using WebGL, if possible,
     // with a fallback to a canvas render. It will also setup the ticker
     // and the root stage PIXI.Container
-    const app = new PIXI.Application();
-
-    // make the application view full screen
-    app.renderer.resize(window.innerWidth, window.innerHeight);
+    this.app = new PIXI.Application({ resizeTo: window });
 
     // The application will create a canvas element for you that you
     // can then insert into the DOM
-    document.body.appendChild(app.view);
+    document.body.appendChild(this.app.view);
+
+    this.init();
 
     const loader = PIXI.Loader.shared;
 
-    // load all the textures of the game
-    TextureManager.shared.init();
-    loader.add("assets/map/map.json");
-
+    // TODO: Replace this with an actual loading screen
     loader.onProgress.add((loader) => {
       console.log(`progress: ${loader.progress}%`);
     });
 
-    // callback when all the files are loaded
-    loader.load(() => {
-      console.log("All files loaded");
+    // All the files are loaded and ready to start
+    loader.load(this.start);
+  }
 
-      const background = new Background(app.renderer.width);
+  /**
+   * {@link App.init} is called when {@link App} is instantiated. Use
+   * {@link PIXI.Loader} to load all the files needed for this game.
+   * {@link App.start} will not be called until all the resources are
+   * loaded into memory.
+   */
+  private init() {
+    TextureManager.shared.init();
+    SoundManager.shared.init();
+    JsonManager.shared.init();
+  }
 
-      // scale the application view content to fill the background height
-      app.stage.scale.set(app.renderer.height / background.sourceTextureHeight);
+  /**
+   * {@link App.start} is called after all the game resources (e.g. map data,
+   * textures, etc) are loaded. This is where we create the game scene.
+   */
+  private start = () => {
+    console.log("All files loaded");
 
-      const viewportWidth = app.renderer.width / app.stage.scale.x;
-      const viewportHeight = app.renderer.height / app.stage.scale.y;
+    this.background = new Background(this.app.renderer.width);
 
-      const foreground = new Foreground(viewportHeight);
+    // scale the application view content to fill the background height
+    const scale =
+      this.app.renderer.height / this.background.sourceTextureHeight;
+    this.app.stage.scale.set(scale);
 
-      // The root containser contains two containers. Background container
-      // is where the background textures are stored (something you as a
-      // player can't interact with). Foreground container is where
-      // everything else is stored (game objects the player can interact
-      // with).
-      app.stage.addChild(background);
-      app.stage.addChild(foreground);
+    // reset scale when the window size changes
+    window.onresize = () => this.app.stage.scale.set(scale);
 
-      // callback to call every frame
-      app.ticker.add(() => {
-        Gravity.shared.tick([foreground.player]);
-        Collision.shared.tick(
-          foreground.player,
-          Object.values(foreground.enemies),
-          foreground.tileMap
-        );
-        background.tick(foreground.player, viewportWidth);
-        foreground.tick(viewportWidth, viewportHeight);
-        Keyboard.shared.tick();
-      });
-    });
+    this.foreground = new Foreground();
+
+    // The root containser contains two containers. Background container
+    // is where the background textures are stored (something you as a
+    // player can't interact with). Foreground container is where
+    // everything else is stored (game objects the player can interact
+    // with).
+    this.app.stage.addChild(this.background);
+    this.app.stage.addChild(this.foreground);
+
+    // call update every frame
+    this.app.ticker.add(this.update);
+  };
+
+  /**
+   * After {@link App.start}, {@link App.update} is called every frame
+   * to update the data in the game.
+   */
+  private update = () => {
+    Gravity.shared.tick([this.foreground.player]);
+    Collision.shared.tick(
+      this.foreground.player,
+      Object.values(this.foreground.enemies),
+      this.foreground.tileMap
+    );
+    this.background.tick(this.foreground.player, this.viewport.width);
+    this.foreground.tick(this.viewport.width, this.viewport.height);
+    Keyboard.shared.tick();
+  };
+
+  /**
+   * Viewport is the visible area of the game. Typically viewport is
+   * same as the window size. However, when the game is zoomed in,
+   * the viewport will be smaller than the window size to scale up
+   * everything.
+   */
+  private get viewport() {
+    return {
+      width: this.app.renderer.width / this.app.stage.scale.x,
+      height: this.app.renderer.height / this.app.stage.scale.y,
+    };
   }
 }
 

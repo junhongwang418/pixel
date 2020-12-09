@@ -1,4 +1,4 @@
-import Enemy from "./Enemy";
+import Sprite from "./Sprite";
 import TileMap from "./TileMap";
 
 /**
@@ -11,26 +11,23 @@ class Collision {
 
   /**
    * Call this function every frame to make sure platformer collision works
-   * and push back the player on the ground.
+   * and push back the sprites on the ground.
    *
    * @param sprites The sprites to apply the collision
    * @param tileMap The tile map of the world
    */
-  public tick(enemies: { [id: string]: Enemy }) {
-    Object.values(enemies).forEach((e) => {
+  public tick(sprites: Sprite[], tileMap: TileMap) {
+    sprites.forEach((s) => {
       // reset on ground
-      e.onGround = false;
+      s.onGround = false;
 
-      const bottomTile = TileMap.shared.getTileIdAtPoint(
-        e.center.x,
-        e.y + e.height
-      );
+      const bottomTile = tileMap.getTileIdAtPoint(s.center.x, s.y + s.height);
 
       // falling and overlapping with ground
-      if (bottomTile && e.vy > 0) {
-        e.onGround = true;
-        e.vy = 0;
-        e.y = bottomTile.y - e.height;
+      if (bottomTile && s.vy > 0) {
+        s.onGround = true;
+        s.vy = 0;
+        s.y = bottomTile.y - s.height;
       }
     });
   }

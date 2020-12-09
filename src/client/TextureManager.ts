@@ -1,15 +1,21 @@
 import * as PIXI from "pixi.js";
 
 /**
- * A singleton class that manages all the textures used in the game.
- * {@link TextureManager.init} must be called before the game starts
- * to load all the textures into GPU.
+ * A singleton class that manages all the images used in the game.
+ * Use {@link TextureManager} to get a texture instead of
+ * {@link PIXI.Loader} throughout the code base. This class decouples
+ * the file paths from the game logic, so if you change an image
+ * file path, this is the only place you need to update.
  */
 class TextureManager {
   public static shared = new TextureManager();
 
   private constructor() {}
 
+  /**
+   * {@link TextureManager.init} must be called before the game starts
+   * to load all the textures into the graphics card.
+   */
   public init() {
     const loader = PIXI.Loader.shared;
     loader.add(this.getMrManIdleTextureFilePaths());

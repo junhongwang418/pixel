@@ -21,12 +21,9 @@ class Player extends Sprite {
   private static readonly HURT_IMPACT_Y = 100;
 
   private state: PlayerState;
-
+  private punchEffect: Effect;
   private landingElapsedMS: number;
   private punchElapsedMS: number;
-
-  private punchEffect: Effect;
-
   private blinkInterval: NodeJS.Timeout | null;
 
   public constructor() {
@@ -110,30 +107,12 @@ class Player extends Sprite {
   /**
    * Apply all the properties specified in the json.
    *
-   * @param {PlayerJson} json Properties to apply
+   * @param json Properties to apply
    */
   public applyJson(json: PlayerJson): void {
-    const {
-      x,
-      y,
-      width,
-      height,
-      vx,
-      vy,
-      state,
-      scaleX,
-      onGround,
-      blinking,
-    } = json;
-    this.position.set(x, y);
-    this.width = width;
-    this.height = height;
-    this.vx = vx;
-    this.vy = vy;
-    this.scale.x = scaleX;
+    super.applyJson(json);
+    const { state, blinking } = json;
     this.setState(state);
-    this.onGround = onGround;
-
     if (!this.blinking && blinking) {
       this.blink();
     }
@@ -153,17 +132,10 @@ class Player extends Sprite {
   /**
    * Get a json representing current state of the player.
    */
-  public get json(): PlayerJson {
+  public json(): PlayerJson {
     return {
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height,
-      vx: this.vx,
-      vy: this.vy,
+      ...super.json(),
       state: this.state,
-      scaleX: this.scale.x,
-      onGround: this.onGround,
       blinking: this.blinking,
     };
   }

@@ -1,5 +1,9 @@
 import { Howl } from "howler";
 
+/**
+ * A singleton class that manages all wav files used in the game
+ * similar to like {@link TextureManager}.
+ */
 class SoundManager {
   public static shared = new SoundManager();
 
@@ -7,8 +11,21 @@ class SoundManager {
   public jump: Howl;
   public punch: Howl;
   public hurt: Howl;
+  public background: Howl;
 
-  private constructor() {
+  private constructor() {}
+
+  /**
+   * {@link SoundManager.init} must be called before the game starts
+   * to load all the sounds beforehand.
+   */
+  public init() {
+    this.background = new Howl({
+      src: ["assets/sound/background/1.wav"],
+      volume: 0.1,
+      loop: true,
+    });
+
     this.footstep = new Howl({
       src: ["assets/sound/effect/footstep.wav"],
       loop: true,

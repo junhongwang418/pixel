@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { SpriteJson } from "../server/Sprite";
 import BoundingBox from "./BoundingBox";
 
 /**
@@ -56,6 +57,11 @@ class Sprite extends PIXI.Sprite {
     this.animationInterval = null;
   }
 
+  /**
+   * Get the center of the sprite. This method is useful
+   * because the center position is independent of
+   * {@link Sprite.flipped}.
+   */
   public get center(): { x: number; y: number } {
     const b = this.bounds;
     return {
@@ -113,6 +119,49 @@ class Sprite extends PIXI.Sprite {
 
   protected get flipped() {
     return this.scale.x < 0;
+  }
+
+  /**
+   * Apply all the properties specified in the json.
+   *
+   * @param json Properties to apply
+   */
+  public applyJson(json: SpriteJson) {
+    const { x, y, width, height, vx, vy, scaleX, onGround } = json;
+    this.position.set(x, y);
+    this.width = width;
+    this.height = height;
+    this.vx = vx;
+    this.vy = vy;
+    this.scale.x = scaleX;
+    this.onGround = onGround;
+  }
+
+  /**
+   * Construct a sprite object based on the json.
+   *
+   * @param json Properties to initialize the player
+   */
+  public static fromJson(json: SpriteJson): Sprite {
+    const sprite = new Sprite();
+    sprite.applyJson(json);
+    return sprite;
+  }
+
+  /**
+   * Get a json representing current state of the sprite.
+   */
+  public json(): SpriteJson {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+      vx: this.vx,
+      vy: this.vy,
+      scaleX: this.scale.x,
+      onGround: this.onGround,
+    };
   }
 }
 

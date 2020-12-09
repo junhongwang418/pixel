@@ -24,7 +24,7 @@ test("overlap returns false when two sprites do not intersect", () => {
  */
 function createSprite(x: number, y: number, width: number, height: number) {
   // empty texture
-  const sprite = new Sprite([]);
+  const sprite = new Sprite();
   sprite.position.set(x, y);
   sprite.width = width;
   sprite.height = height;

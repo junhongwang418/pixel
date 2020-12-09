@@ -22,6 +22,12 @@ class Player extends Sprite {
   public state = PlayerState.Idle;
   public blinking = false;
 
+  constructor(x: number, y: number) {
+    super();
+    this.x = x;
+    this.y = y;
+  }
+
   public applyJson(json: PlayerJson) {
     super.applyJson(json);
     const { state, blinking } = json;

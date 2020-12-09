@@ -1,4 +1,4 @@
-import Enemy from "./Enemy";
+import Sprite from "./Sprite";
 
 /**
  * A singleton class that handles the gravity of the game.
@@ -18,9 +18,9 @@ class Gravity {
    *
    * @param sprites The sprites to apply the gravity
    */
-  public tick(enemies: { [id: string]: Enemy }) {
-    Object.values(enemies).forEach((enemy) => {
-      enemy.vy += (Gravity.G * 16.66) / 1000;
+  public tick(sprites: Sprite[]) {
+    sprites.forEach((s) => {
+      s.vy += (Gravity.G * 16.66) / 1000;
     });
   }
 }

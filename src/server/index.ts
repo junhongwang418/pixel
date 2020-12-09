@@ -1,3 +1,11 @@
+/**
+ * The game server running at root. In production, it is
+ * `https://ioneone-pixel.herokuapp.com/`. In development,
+ * it is `http://localhost:3000/`.
+ *
+ * @packageDocumentation
+ */
+
 import express from "express";
 import http from "http";
 import SocketIO from "socket.io";
@@ -6,6 +14,8 @@ import Gravity from "./Gravity";
 import Collision from "./Collision";
 import Player, { PlayerJson } from "./Player";
 import Enemy from "./Enemy";
+import JsonLoader from "./JsonLoader";
+import TileMap from "./TileMap";
 
 const app = express();
 const server = http.createServer(app);
@@ -16,71 +26,82 @@ const port = process.env.PORT || 3000;
 app.use(express.static("dist/client"));
 app.use("/docs", express.static("dist/docs"));
 
-const players: { [id: string]: Player } = {};
-const enemies: { [id: string]: Enemy } = {};
+const loader = JsonLoader.shared;
 
-// create enemies
-for (let i = 0; i < 10; i++) {
-  const randomX = 100 + Math.random() * 300;
-  const enemy = new Enemy(randomX);
-  enemy.x = randomX;
-  enemies[uuidv4()] = enemy;
-}
+loader.add("dist/client/assets/map/map.json");
 
-setInterval(() => {
-  Gravity.shared.tick(enemies);
-  Collision.shared.tick(enemies);
-  Object.values(enemies).forEach((e) => e.tick());
-}, 16.66);
+loader.load(() => {
+  const players: { [id: string]: Player } = {};
+  const enemies: { [id: string]: Enemy } = {};
 
-io.on("connection", (socket) => {
-  const playerJsons = {};
-  Object.entries(players).forEach(
-    ([id, player]) => (playerJsons[id] = player.json())
-  );
+  // create enemies
+  for (let i = 0; i < 10; i++) {
+    const randomX = 100 + Math.random() * 300;
+    const enemy = new Enemy(randomX);
+    enemy.x = randomX;
+    enemies[uuidv4()] = enemy;
+  }
 
-  const enemyJsons = {};
-  Object.entries(enemies).forEach(
-    ([id, enemy]) => (enemyJsons[id] = enemy.json())
-  );
-
-  socket.emit("init", {
-    players: playerJsons,
-    enemies: enemyJsons,
-  });
-
-  players[socket.id] = new Player();
-
-  socket.broadcast.emit("create", {
-    id: socket.id,
-    json: players[socket.id].json(),
-  });
-
-  socket.on("disconnect", () => {
-    socket.broadcast.emit("delete", {
-      id: socket.id,
-    });
-    delete players[socket.id];
-  });
-
-  socket.on("update-player", (json: PlayerJson) => {
-    players[socket.id].applyJson(json);
-
-    socket.broadcast.emit("update-player", {
-      id: socket.id,
-      json,
-    });
-  });
+  const tileMap = new TileMap();
 
   setInterval(() => {
+    // The client handles player ticks. The server
+    // handles all the enemy ticks.
+    Gravity.shared.tick(Object.values(enemies));
+    Collision.shared.tick(Object.values(enemies), tileMap);
+    Object.values(enemies).forEach((e) => e.tick());
+  }, 16.66);
+
+  io.on("connection", (socket) => {
+    players[socket.id] = new Player(16, 0);
+
+    const playerJsons = {};
+    Object.entries(players).forEach(
+      ([id, player]) => (playerJsons[id] = player.json())
+    );
+
     const enemyJsons = {};
     Object.entries(enemies).forEach(
       ([id, enemy]) => (enemyJsons[id] = enemy.json())
     );
-    socket.emit("update-enemies", enemyJsons);
-  }, 16.66);
-});
 
-server.listen(port, () => {
-  console.log(`Listening on port ${port}`);
+    socket.emit("init", {
+      players: playerJsons,
+      enemies: enemyJsons,
+    });
+
+    socket.broadcast.emit("create", {
+      id: socket.id,
+      json: players[socket.id].json(),
+    });
+
+    socket.on("disconnect", () => {
+      socket.broadcast.emit("delete", {
+        id: socket.id,
+      });
+      delete players[socket.id];
+    });
+
+    socket.on("update-player", (json: PlayerJson) => {
+      players[socket.id].applyJson(json);
+
+      socket.broadcast.emit("update-player", {
+        id: socket.id,
+        json,
+      });
+    });
+
+    // send the latest enemy data to all the connections
+    setInterval(() => {
+      const enemyJsons = {};
+      Object.entries(enemies).forEach(
+        ([id, enemy]) => (enemyJsons[id] = enemy.json())
+      );
+      socket.emit("update-enemies", enemyJsons);
+    }, 16.66);
+  });
+
+  server.listen(port, () => {
+    console.log(`Listening on port ${port}`);
+  });
 });

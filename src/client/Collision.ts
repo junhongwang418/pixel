@@ -39,6 +39,7 @@ class Collision {
       player.y = bottomTile.y - player.height;
     }
 
+    // check if the player overlaps with an enemy
     enemies.forEach((e) => {
       if (Collision.shared.overlap(player, e)) {
         player.hurt(e, player.center.x < e.center.x ? -1 : 1);

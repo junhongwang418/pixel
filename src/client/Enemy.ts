@@ -1,7 +1,10 @@
-import * as PIXI from "pixi.js";
 import Sprite from "./Sprite";
 import { EnemyState, EnemyJson } from "../server/Enemy";
+import TextureManager from "./TextureManager";
 
+/**
+ * The sprite the player can attack.
+ */
 class Enemy extends Sprite {
   private state: EnemyState;
 
@@ -25,24 +28,20 @@ class Enemy extends Sprite {
   /**
    * Apply all the properties specified in the json.
    *
-   * @param {EnemyJson} json Properties to apply
+   * @param json Properties to apply
    */
-  public applyJson(json: EnemyJson): void {
-    const { x, y, vx, vy, state, scaleX, onGround } = json;
-    this.position.set(x, y);
-    this.vx = vx;
-    this.vy = vy;
-    this.scale.x = scaleX;
+  public applyJson(json: EnemyJson) {
+    super.applyJson(json);
+    const { state } = json;
     this.setState(state);
-    this.onGround = onGround;
   }
 
   /**
    * Construct an enemy object based on the json.
    *
-   * @param json Properties to initialize the player
+   * @param json Properties to initialize the enemy
    */
-  public static fromJson(json: EnemyJson): Enemy {
+  public static fromJson(json: EnemyJson) {
     const enemy = new Enemy();
     enemy.applyJson(json);
     return enemy;
@@ -51,36 +50,19 @@ class Enemy extends Sprite {
   /**
    * Get a json representing current state of the enemy.
    */
-  public get json(): EnemyJson {
+  public json(): EnemyJson {
     return {
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height,
-      vx: this.vx,
-      vy: this.vy,
+      ...super.json(),
       state: this.state,
-      scaleX: this.scale.x,
-      onGround: this.onGround,
     };
   }
 
   private static getTextures(state: EnemyState) {
     switch (state) {
       case EnemyState.Idle:
-        return [
-          PIXI.Loader.shared.resources[`assets/sprites/bub/idle_0.png`].texture,
-          PIXI.Loader.shared.resources[`assets/sprites/bub/idle_1.png`].texture,
-        ];
+        return TextureManager.shared.getBubIdleTextures();
       case EnemyState.Run:
-        return [
-          PIXI.Loader.shared.resources[`assets/sprites/bub/run_0.png`].texture,
-          PIXI.Loader.shared.resources[`assets/sprites/bub/run_1.png`].texture,
-          PIXI.Loader.shared.resources[`assets/sprites/bub/run_2.png`].texture,
-          PIXI.Loader.shared.resources[`assets/sprites/bub/run_3.png`].texture,
-          PIXI.Loader.shared.resources[`assets/sprites/bub/run_4.png`].texture,
-          PIXI.Loader.shared.resources[`assets/sprites/bub/run_5.png`].texture,
-        ];
+        return TextureManager.shared.getBubRunTextures();
       default:
         return [];
     }

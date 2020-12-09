@@ -1,51 +1,18 @@
 import * as PIXI from "pixi.js";
 import BoundingBox from "./BoundingBox";
-
-interface TileMapData {
-  compressionlevel: number;
-  height: number;
-  infinite: boolean;
-  layers: {
-    data: number[];
-    height: number;
-    id: number;
-    name: string;
-    opacity: number;
-    type: string;
-    visible: boolean;
-    width: number;
-    x: number;
-    y: number;
-  }[];
-  nextlayerid: number;
-  nextobjectid: number;
-  orientation: string;
-  renderorder: string;
-  tileversion: string;
-  tileheight: number;
-  tilesets: {
-    columns: number;
-    firstgid: number;
-    image: string;
-    imageheight: number;
-    imagewidth: number;
-    margin: number;
-    spacing: number;
-    tilecount: number;
-    tileheight: number;
-    tilewidth: number;
-  }[];
-  tilewidth: number;
-  type: string;
-  version: number;
-  width: number;
-}
+import JsonManager from "./JsonManager";
+import TextureManager from "./TextureManager";
 
 class Tile extends PIXI.Sprite {
   public static readonly SIZE = 16;
 
+  /**
+   * Create {@link Tile} from an id. Tile id starts from 1.
+   *
+   * @param id Tile id
+   */
   constructor(id: number) {
-    super(PIXI.Loader.shared.resources[`assets/tiles/tile_${id}.png`].texture);
+    super(TextureManager.shared.getTileTextures()[id - 1]);
     BoundingBox.shared.add(this);
   }
 }
@@ -53,11 +20,13 @@ class Tile extends PIXI.Sprite {
 class TileMap extends PIXI.Container {
   private tiles: (Tile | null)[][];
 
+  /**
+   * Create set of tiles based on tile map json file.
+   */
   constructor() {
     super();
 
-    const tileMapData = PIXI.Loader.shared.resources["assets/map/map.json"]
-      .data as TileMapData;
+    const tileMapData = JsonManager.shared.getTileMapData();
 
     const height = tileMapData.layers[0].height;
     const width = tileMapData.layers[0].width;

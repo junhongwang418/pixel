@@ -6,7 +6,7 @@ import Sprite from "./Sprite";
  * Call {@link Gravity.tick} every frame to enable gravity.
  */
 class Gravity {
-  // The downward acceleration per second
+  // The downward acceleration per pixel per second
   public static readonly G = 600;
 
   public static shared = new Gravity();
@@ -14,8 +14,7 @@ class Gravity {
   private constructor() {}
 
   /**
-   * Call this method every frame to pull down the player
-   * and enemies in the game.
+   * Call this method every frame to pull down the player.
    *
    * @param sprites The sprites to apply the gravity
    */

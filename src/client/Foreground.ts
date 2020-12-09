@@ -1,55 +1,43 @@
 import * as PIXI from "pixi.js";
-import { Howl } from "howler";
 import Player from "./Player";
 import io from "socket.io-client";
 import TileMap from "./TileMap";
 import Enemy from "./Enemy";
 import { PlayerJson } from "../server/Player";
 import { EnemyJson } from "../server/Enemy";
+import SoundManager from "./SoundManager";
 
 /**
- * A {@link PIXI.Container} where all the game objects reside.
+ * A {@link PIXI.Container} where all the game objects live.
  */
 class Foreground extends PIXI.Container {
   public player: Player;
-
   public enemies: { [id: string]: Enemy };
   public tileMap: TileMap;
 
   private socket: SocketIOClient.Socket;
+
+  // All the external players
   private players: { [id: string]: Player };
 
   /**
    * Initialize all the game objects in the foreground.
-   *
-   * @param viewportHeight Height of the screen
    */
-  constructor(viewportHeight: number) {
+  constructor() {
     super();
 
-    const sound = new Howl({
-      src: ["assets/sound/background/1.wav"],
-      volume: 0.1,
-      loop: true,
-    });
-
-    sound.play();
-
-    this.socket = io();
     this.player = new Player();
+    this.socket = io();
     this.players = {};
     this.enemies = {};
-
-    this.players[this.socket.id] = this.player;
-
-    this.player.x = 16;
-    this.player.y = viewportHeight - 32;
-
     this.tileMap = new TileMap();
 
     this.addChild(this.tileMap);
     this.addChild(this.player);
 
+    SoundManager.shared.background.play();
+
+    // register callbacks on socket events
     this.socket.on(
       "init",
       (data: {
@@ -57,9 +45,13 @@ class Foreground extends PIXI.Container {
         enemies: { [id: string]: EnemyJson };
       }) => {
         Object.entries(data.players).forEach(([id, json]) => {
-          const player = Player.fromJson(json);
-          this.players[id] = player;
-          this.addChild(player);
+          if (id === this.socket.id) {
+            this.player.applyJson(json);
+          } else {
+            const player = Player.fromJson(json);
+            this.players[id] = player;
+            this.addChild(player);
+          }
         });
         Object.entries(data.enemies).forEach(([id, json]) => {
           const enemy = Enemy.fromJson(json);
@@ -125,7 +117,7 @@ class Foreground extends PIXI.Container {
     }
 
     // notify all other connections about the player data of this connection
-    this.socket.emit("update-player", this.player.json);
+    this.socket.emit("update-player", this.player.json());
   }
 }
 
