@@ -30,6 +30,10 @@ class App {
     // and the root stage PIXI.Container
     this.app = new PIXI.Application({ resizeTo: window });
 
+    // set custom cursor
+    this.app.renderer.plugins.interaction.cursorStyles.default =
+      "url(assets/ui/cursor_default.png), auto";
+
     // The application will create a canvas element for you that you
     // can then insert into the DOM
     document.body.appendChild(this.app.view);
