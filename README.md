@@ -5,7 +5,7 @@
 </p>
 
 [![Build Status](https://travis-ci.com/ioneone/pixel.svg?branch=master)](https://travis-ci.com/ioneone/pixel)
-[![Lines of Code](https://tokei.rs/b1/github/ioneone/pixel)
+![Lines of Code](https://tokei.rs/b1/github/ioneone/pixel)
 
 The objective of this project is to show my potential as a Software Engineer because I believe game is one of the most complicated programs to build.
 
