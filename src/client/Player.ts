@@ -39,7 +39,7 @@ class Player extends Sprite {
   /**
    * Update state for current frame.
    */
-  public tick(): void {
+  public tick = () => {
     super.tick();
 
     this.landingElapsedMS += PIXI.Ticker.shared.elapsedMS;
@@ -102,7 +102,7 @@ class Player extends Sprite {
         this.setState(PlayerState.Falling);
       }
     }
-  }
+  };
 
   /**
    * Apply all the properties specified in the json.

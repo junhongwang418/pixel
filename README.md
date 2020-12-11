@@ -1,7 +1,7 @@
 # Pixel — 2D side scrolling multiplayer game
 
 <p align="center">
-  <img src="icon.png" alt="icon">
+  <img src="https://github.com/ioneone/pixel/blob/master/icon.png?raw=true" alt="icon">
 </p>
 
 [![Build Status](https://travis-ci.com/ioneone/pixel.svg?branch=master)](https://travis-ci.com/ioneone/pixel)

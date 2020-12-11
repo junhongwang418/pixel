@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js";
 import Player from "./Player";
+import SceneManager from "./SceneManager";
 import TextureManager from "./TextureManager";
 
 /**
@@ -46,11 +47,7 @@ class Background extends PIXI.Container {
    * @param player The sprite the background moves with respect to
    * @param viewportWidth Width of the screen
    */
-  public tick(player: Player | null, viewportWidth: number) {
-    if (player == null) {
-      return;
-    }
-
+  public tick(player: Player, viewportWidth: number) {
     // check if the player is near the left world boundary
     if (player.center.x > viewportWidth / 2) {
       this.tilingSprites

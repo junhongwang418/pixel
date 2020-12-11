@@ -6,6 +6,7 @@ import Enemy from "./Enemy";
 import { PlayerJson } from "../server/Player";
 import { EnemyJson } from "../server/Enemy";
 import SoundManager from "./SoundManager";
+import SceneManager from "./SceneManager";
 
 /**
  * A {@link PIXI.Container} where all the game objects live.
@@ -89,6 +90,8 @@ class Foreground extends PIXI.Container {
     });
   }
 
+  public start() {}
+
   /**
    * Call this method every frame to update all the game objects in the foreground
    * including the container itself.
@@ -96,7 +99,7 @@ class Foreground extends PIXI.Container {
    * @param viewportWidth Width of the screen
    * @param viewportHeight Height of the screen
    */
-  public tick(viewportWidth: number, viewportHeight: number) {
+  public tick = (viewportWidth: number, viewportHeight: number) => {
     this.player.tick();
 
     // make the screen chase the player
@@ -118,7 +121,7 @@ class Foreground extends PIXI.Container {
 
     // notify all other connections about the player data of this connection
     this.socket.emit("update-player", this.player.json());
-  }
+  };
 }
 
 export default Foreground;
