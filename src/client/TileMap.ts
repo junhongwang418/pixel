@@ -4,7 +4,7 @@ import JsonManager from "./JsonManager";
 import TextureManager from "./TextureManager";
 
 class Tile extends PIXI.Sprite {
-  public static readonly SIZE = 16;
+  public static readonly SIZE = 48;
 
   /**
    * Create {@link Tile} from an id. Tile id starts from 1.

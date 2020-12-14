@@ -10,18 +10,11 @@ class PlayScene extends Scene {
   private background: Background;
   private foreground: Foreground;
 
-  constructor() {
+  constructor(username: string) {
     super();
     this.background = new Background(1024);
 
-    // scale the application view content to fill the background height
-    const scale = window.innerHeight / this.background.sourceTextureHeight;
-    this.scale.set(scale);
-
-    // reset scale when the window size changes
-    window.onresize = () => this.scale.set(scale);
-
-    this.foreground = new Foreground();
+    this.foreground = new Foreground(username);
 
     // The root containser contains two containers. Background container
     // is where the background textures are stored (something you as a
@@ -41,8 +34,8 @@ class PlayScene extends Scene {
       Object.values(this.foreground.enemies),
       this.foreground.tileMap
     );
-    this.background.tick(this.foreground.player, this.viewport.width);
-    this.foreground.tick(this.viewport.width, this.viewport.height);
+    this.background.tick(this.foreground.player);
+    this.foreground.tick();
     Keyboard.shared.tick();
   };
 }

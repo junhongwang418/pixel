@@ -6,14 +6,49 @@ import Enemy from "./Enemy";
 import TextureManager from "./TextureManager";
 import SoundManager from "./SoundManager";
 import { PlayerJson, PlayerState } from "../server/Player";
+import Text from "./Text";
+import Scene from "./Scene";
+import SceneManager from "./SceneManager";
+
+class NameTag extends PIXI.Container {
+  public box: PIXI.Graphics;
+  private nameText: Text;
+
+  constructor(name: string) {
+    super();
+
+    this.nameText = new Text(name, { fontSize: 16 });
+    this.nameText.x = 4;
+    this.nameText.y = 2;
+
+    this.box = new PIXI.Graphics();
+    this.box.beginFill(0x000000, 0.72);
+    this.box.drawRect(0, 0, this.nameText.width + 8, this.nameText.height + 4);
+    this.box.endFill();
+
+    this.addChild(this.box);
+    this.box.addChild(this.nameText);
+  }
+
+  public setName(name: string) {
+    this.nameText.text = name;
+    this.removeChild(this.box);
+    this.box = new PIXI.Graphics();
+    this.box.beginFill(0x000000, 0.72);
+    this.box.drawRect(0, 0, this.nameText.width + 8, this.nameText.height + 4);
+    this.box.endFill();
+    this.addChild(this.box);
+    this.box.addChild(this.nameText);
+  }
+}
 
 /**
  * The sprite the user can control.
  */
 class Player extends Sprite {
   private static readonly LANDING_DURATION = 100;
-  private static readonly JUMP_SPEED = 240;
-  private static readonly MOVE_SPEED = 60;
+  private static readonly JUMP_SPEED = 600;
+  private static readonly MOVE_SPEED = 120;
   private static readonly PUNCH_DURATION = 200;
   private static readonly BLINK_DURATION = 2000;
   private static readonly BLINK_INTERVAL = 60;
@@ -25,15 +60,25 @@ class Player extends Sprite {
   private landingElapsedMS: number;
   private punchElapsedMS: number;
   private blinkInterval: NodeJS.Timeout | null;
+  private nameTag: NameTag;
+  private username: string;
 
-  public constructor() {
+  public constructor(username: string) {
     super(Player.getTextures(PlayerState.Idle));
     this.setState(PlayerState.Idle);
     this.landingElapsedMS = 0;
     this.punchElapsedMS = 0;
-    // position relative to player
-    this.punchEffect = new Effect(16, -8);
     this.blinkInterval = null;
+    this.username = username;
+
+    // position relative to player
+    this.punchEffect = new Effect(48, -8);
+
+    this.nameTag = new NameTag(username);
+    this.nameTag.x = this.width / 2 - this.nameTag.width / 2;
+    this.nameTag.y = this.height + 4;
+
+    this.addChild(this.nameTag);
   }
 
   /**
@@ -41,6 +86,8 @@ class Player extends Sprite {
    */
   public tick = () => {
     super.tick();
+
+    // this.nameTag.y = this.height / this.scale.y;
 
     this.landingElapsedMS += PIXI.Ticker.shared.elapsedMS;
     this.punchElapsedMS += PIXI.Ticker.shared.elapsedMS;
@@ -111,11 +158,15 @@ class Player extends Sprite {
    */
   public applyJson(json: PlayerJson): void {
     super.applyJson(json);
-    const { state, blinking } = json;
+    const { state, blinking, name } = json;
     this.setState(state);
     if (!this.blinking && blinking) {
       this.blink();
     }
+    this.username = name;
+    this.nameTag.setName(name);
+    this.nameTag.x = this.width / 2 - this.nameTag.width / 2;
+    this.nameTag.y = this.height + 4;
   }
 
   /**
@@ -124,7 +175,7 @@ class Player extends Sprite {
    * @param json Properties to initialize the player
    */
   public static fromJson(json: PlayerJson): Player {
-    const player = new Player();
+    const player = new Player("");
     player.applyJson(json);
     return player;
   }
@@ -137,6 +188,7 @@ class Player extends Sprite {
       ...super.json(),
       state: this.state,
       blinking: this.blinking,
+      name: this.username,
     };
   }
 
@@ -243,6 +295,15 @@ class Player extends Sprite {
 
   public get blinking() {
     return this.blinkInterval != null;
+  }
+
+  protected setFlipped(flipped: boolean) {
+    if (this.flipped === flipped) return;
+
+    this.nameTag.scale.x *= -1;
+    this.nameTag.position.x = this.width / 2 - this.nameTag.width / 2;
+
+    super.setFlipped(flipped);
   }
 }
 

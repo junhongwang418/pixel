@@ -3,7 +3,6 @@ import TextureManager from "./TextureManager";
 import JsonManager from "./JsonManager";
 import SoundManager from "./SoundManager";
 import LoadingScene from "./LoadingScene";
-import MenuScene from "./MenuScene";
 import SceneManager from "./SceneManager";
 import Scene from "./Scene";
 
@@ -26,7 +25,7 @@ class App {
     // The application will create a renderer using WebGL, if possible,
     // with a fallback to a canvas render. It will also setup the ticker
     // and the root stage PIXI.Container
-    this.app = new PIXI.Application({ resizeTo: window });
+    this.app = new PIXI.Application();
 
     // set custom cursor
     this.app.renderer.plugins.interaction.cursorStyles.default =
@@ -52,8 +51,8 @@ class App {
    */
   public get viewport() {
     return {
-      width: this.app.renderer.width / this.scene.scale.x,
-      height: this.app.renderer.height / this.scene.scale.y,
+      width: this.app.renderer.width,
+      height: this.app.renderer.height,
     };
   }
 

@@ -14,11 +14,13 @@ export enum PlayerState {
 }
 
 export interface PlayerJson extends SpriteJson {
+  name: string;
   state: PlayerState;
   blinking: boolean;
 }
 
 class Player extends Sprite {
+  public name = "";
   public state = PlayerState.Idle;
   public blinking = false;
 
@@ -30,9 +32,10 @@ class Player extends Sprite {
 
   public applyJson(json: PlayerJson) {
     super.applyJson(json);
-    const { state, blinking } = json;
+    const { state, blinking, name } = json;
     this.state = state;
     this.blinking = blinking;
+    this.name = name;
   }
 
   public json(): PlayerJson {
@@ -40,6 +43,7 @@ class Player extends Sprite {
       ...super.json(),
       state: this.state,
       blinking: this.blinking,
+      name: this.name,
     };
   }
 }

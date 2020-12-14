@@ -108,7 +108,7 @@ class Sprite extends PIXI.Sprite {
     if (this.flipped === flipped) return;
 
     this.scale.x *= -1;
-    this.position.x -= this.scale.x * this.width;
+    this.position.x += (this.scale.x < 0 ? 1 : -1) * this.width;
   }
 
   protected setAnimationIntervalMS(ms: number) {
@@ -127,14 +127,18 @@ class Sprite extends PIXI.Sprite {
    * @param json Properties to apply
    */
   public applyJson(json: SpriteJson) {
-    const { x, y, width, height, vx, vy, scaleX, onGround } = json;
-    this.position.set(x, y);
-    this.width = width;
-    this.height = height;
+    const { x, y, width, height, vx, vy, flipped, onGround } = json;
     this.vx = vx;
     this.vy = vy;
-    this.scale.x = scaleX;
     this.onGround = onGround;
+
+    this.setFlipped(flipped);
+
+    if (flipped) {
+      this.position.set(x + this.width, y);
+    } else {
+      this.position.set(x, y);
+    }
   }
 
   /**
@@ -153,13 +157,13 @@ class Sprite extends PIXI.Sprite {
    */
   public json(): SpriteJson {
     return {
-      x: this.x,
+      x: this.x + (this.flipped ? -this.width : 0),
       y: this.y,
       width: this.width,
       height: this.height,
       vx: this.vx,
       vy: this.vy,
-      scaleX: this.scale.x,
+      flipped: this.flipped,
       onGround: this.onGround,
     };
   }

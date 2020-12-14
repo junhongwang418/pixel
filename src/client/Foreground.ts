@@ -7,6 +7,7 @@ import { PlayerJson } from "../server/Player";
 import { EnemyJson } from "../server/Enemy";
 import SoundManager from "./SoundManager";
 import SceneManager from "./SceneManager";
+import Text from "./Text";
 
 /**
  * A {@link PIXI.Container} where all the game objects live.
@@ -24,10 +25,10 @@ class Foreground extends PIXI.Container {
   /**
    * Initialize all the game objects in the foreground.
    */
-  constructor() {
+  constructor(username: string) {
     super();
 
-    this.player = new Player();
+    this.player = new Player(username);
     this.socket = io();
     this.players = {};
     this.enemies = {};
@@ -36,7 +37,7 @@ class Foreground extends PIXI.Container {
     this.addChild(this.tileMap);
     this.addChild(this.player);
 
-    SoundManager.shared.background.play();
+    // SoundManager.shared.background.play();
 
     // register callbacks on socket events
     this.socket.on(
@@ -47,7 +48,7 @@ class Foreground extends PIXI.Container {
       }) => {
         Object.entries(data.players).forEach(([id, json]) => {
           if (id === this.socket.id) {
-            this.player.applyJson(json);
+            // this.player.applyJson(json);
           } else {
             const player = Player.fromJson(json);
             this.players[id] = player;
@@ -95,12 +96,12 @@ class Foreground extends PIXI.Container {
   /**
    * Call this method every frame to update all the game objects in the foreground
    * including the container itself.
-   *
-   * @param viewportWidth Width of the screen
-   * @param viewportHeight Height of the screen
    */
-  public tick = (viewportWidth: number, viewportHeight: number) => {
+  public tick = () => {
     this.player.tick();
+
+    const viewportWidth = SceneManager.shared.viewport.width;
+    const viewportHeight = SceneManager.shared.viewport.height;
 
     // make the screen chase the player
     if (this.player.center.x > viewportWidth / 2) {

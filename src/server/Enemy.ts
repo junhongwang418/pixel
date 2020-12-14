@@ -11,7 +11,7 @@ export interface EnemyJson extends SpriteJson {
 }
 
 class Enemy extends Sprite {
-  private static readonly MOVE_SPEED = 30;
+  private static readonly MOVE_SPEED = 60;
   private static readonly MOVE_REGION = 100;
 
   public state = EnemyState.Idle;
@@ -50,7 +50,7 @@ class Enemy extends Sprite {
     if (this.timeUntilNextAction < 0) {
       this.resetNextActionTime();
 
-      this.setFlipped(Random.choice([true, false]));
+      this.flipped = Random.choice([true, false]);
       this.state = Random.choice([EnemyState.Idle, EnemyState.Run]);
 
       if (this.state === EnemyState.Idle) {

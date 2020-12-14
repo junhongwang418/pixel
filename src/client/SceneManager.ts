@@ -15,6 +15,10 @@ class SceneManager {
   public setScene(scene: Scene) {
     this.app.setScene(scene);
   }
+
+  public get viewport() {
+    return this.app.viewport;
+  }
 }
 
 export default SceneManager;

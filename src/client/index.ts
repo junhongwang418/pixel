@@ -13,7 +13,7 @@ import App from "./App";
 // @ts-ignore
 window.WebFontConfig = {
   google: {
-    families: ["VT323"],
+    families: ["VT323", "Roboto Mono"],
   },
 
   active() {

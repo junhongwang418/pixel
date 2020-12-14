@@ -7,7 +7,7 @@ import Sprite from "./Sprite";
  */
 class Gravity {
   // The downward acceleration per pixel per second
-  public static readonly G = 600;
+  public static readonly G = 1200;
 
   public static shared = new Gravity();
 

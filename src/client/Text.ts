@@ -8,14 +8,15 @@ class Text extends PIXI.Text {
   constructor(
     text: string,
     options?: {
+      fontFamily?: string;
       fontSize?: number;
     }
   ) {
     super(
       text,
       new PIXI.TextStyle({
-        fontFamily: "VT323",
-        fontSize: options?.fontSize || 32,
+        fontFamily: options?.fontFamily || "Roboto Mono",
+        fontSize: options?.fontSize || 24,
         fill: "#ffffff",
         wordWrap: true,
         wordWrapWidth: 440,

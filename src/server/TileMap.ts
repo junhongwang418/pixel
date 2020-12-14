@@ -12,7 +12,7 @@ class Tile extends Sprite {
 }
 
 class TileMap {
-  private static readonly TILE_SIZE = 16;
+  private static readonly TILE_SIZE = 48;
 
   private tiles: (Tile | null)[][];
 

@@ -7,8 +7,6 @@ import TextureManager from "./TextureManager";
  * {@link PIXI.Container} with Parallax scrolling support.
  */
 class Background extends PIXI.Container {
-  public sourceTextureWidth: number;
-  public sourceTextureHeight: number;
   public tilingSprites: PIXI.TilingSprite[];
 
   /**
@@ -23,15 +21,15 @@ class Background extends PIXI.Container {
 
     const textures = TextureManager.shared.getGrasslandTextures();
 
-    const texture = textures[0];
-    this.sourceTextureWidth = texture.width;
-    this.sourceTextureHeight = texture.height;
-
     this.tilingSprites = [];
     for (let i = 0; i < textures.length; i++) {
-      this.tilingSprites.push(
-        new PIXI.TilingSprite(textures[i], width, this.sourceTextureHeight)
+      const tilingSprite = new PIXI.TilingSprite(
+        textures[i],
+        width,
+        textures[i].height
       );
+      tilingSprite.scale.set(3);
+      this.tilingSprites.push(tilingSprite);
     }
 
     this.addChild(...this.tilingSprites.slice().reverse());
@@ -45,9 +43,9 @@ class Background extends PIXI.Container {
    * away from the scene.
    *
    * @param player The sprite the background moves with respect to
-   * @param viewportWidth Width of the screen
    */
-  public tick(player: Player, viewportWidth: number) {
+  public tick(player: Player) {
+    const viewportWidth = SceneManager.shared.viewport.width;
     // check if the player is near the left world boundary
     if (player.center.x > viewportWidth / 2) {
       this.tilingSprites

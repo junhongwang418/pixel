@@ -6,6 +6,7 @@ class Key {
 
   public isDown: boolean;
   public isUp: boolean;
+  public isPressed: boolean;
 
   /**
    * @param key String representation of the keyboard key
@@ -45,8 +46,10 @@ class Keyboard {
    * Call this function every frame to update keyboard key states.
    */
   public tick(): void {
-    // clear key up event
-    Object.values(this.keys).forEach((key) => (key.isUp = false));
+    Object.values(this.keys).forEach((key) => {
+      // clear key up event
+      key.isUp = false;
+    });
   }
 
   /**
