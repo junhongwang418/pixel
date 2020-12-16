@@ -7,8 +7,7 @@ import TextureManager from "./TextureManager";
 import SoundManager from "./SoundManager";
 import { PlayerJson, PlayerState } from "../server/Player";
 import Text from "./Text";
-import Scene from "./Scene";
-import SceneManager from "./SceneManager";
+import Controller from "./Controller";
 
 class NameTag extends PIXI.Container {
   public box: PIXI.Graphics;
@@ -48,8 +47,8 @@ class NameTag extends PIXI.Container {
 class Player extends Sprite {
   private static readonly LANDING_DURATION = 100;
   private static readonly JUMP_SPEED = 600;
-  private static readonly MOVE_SPEED = 120;
-  private static readonly PUNCH_DURATION = 200;
+  private static readonly MOVE_SPEED = 140;
+  private static readonly PUNCH_DURATION = 300;
   private static readonly BLINK_DURATION = 2000;
   private static readonly BLINK_INTERVAL = 60;
   private static readonly HURT_IMPACT_X = 30;

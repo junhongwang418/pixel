@@ -1,7 +1,6 @@
 /**
- * The game server running at root. In production, it is
- * `https://ioneone-pixel.herokuapp.com/`. In development,
- * it is `http://localhost:3000/`.
+ * Serves client code at root. Delegates the game logic
+ * to {@link App}.
  *
  * @packageDocumentation
  */

@@ -2,73 +2,106 @@ import * as PIXI from "pixi.js";
 import TextureManager from "./TextureManager";
 import JsonManager from "./JsonManager";
 import SoundManager from "./SoundManager";
-import LoadingScene from "./LoadingScene";
-import SceneManager from "./SceneManager";
-import Scene from "./Scene";
+import Controller from "./Controller";
+import Keyboard from "./Keyboard";
 
 /**
- * Entry point of PixiJS application. Instantiate {@link App} to
+ * Entry point of PixiJS application. Call {@link App.start} to
  * initializes the game and enter the game loop.
+ *
+ * This class manages the current {@link Controller} by the game. It
+ * calls {@link Controller.tick} method every frame.
  */
-class App {
-  private app: PIXI.Application;
-  private scene: Scene;
+class App extends PIXI.Application {
+  public static shared = new App();
+  private controller: Controller;
+  private tick: () => void;
+  private clickCallbacks: { [key: string]: () => void };
 
   /**
-   * Initialize the game and enter the game loop automatically.
+   * The application will create a renderer using WebGL, if possible,
+   * with a fallback to a canvas render. It will also setup the ticker
+   * and the root stage PIXI.Container.
    */
   constructor() {
-    // Disable interpolation when scaling because all the textures
-    // in this game are pixelart.
+    super();
+
+    this.clickCallbacks = {};
+
+    // Disable interpolation when scaling because this game uses pixelart.
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
-    // The application will create a renderer using WebGL, if possible,
-    // with a fallback to a canvas render. It will also setup the ticker
-    // and the root stage PIXI.Container
-    this.app = new PIXI.Application();
-
     // set custom cursor
-    this.app.renderer.plugins.interaction.cursorStyles.default =
+    this.renderer.plugins.interaction.cursorStyles.default =
       "url(assets/ui/cursor_default.png), auto";
 
     // The application will create a canvas element for you that you
     // can then insert into the DOM
-    document.body.appendChild(this.app.view);
+    document.body.appendChild(this.view);
 
     TextureManager.shared.init();
     SoundManager.shared.init();
     JsonManager.shared.init();
-    SceneManager.shared.init(this);
 
-    this.setScene(new LoadingScene());
+    // listen to pointerdown event
+    this.stage.interactive = true;
+    this.stage.hitArea = new PIXI.Rectangle(
+      0,
+      0,
+      this.viewport.width,
+      this.viewport.height
+    );
+    this.stage.on("pointerdown", () => {
+      Object.values(this.clickCallbacks).forEach((cb) => cb());
+    });
   }
 
   /**
-   * Viewport is the visible area of the game. Typically viewport is
-   * same as the window size. However, when the game is zoomed in,
-   * the viewport will be smaller than the window size to scale up
-   * everything.
+   * Get the application window size. The size will be useful for
+   * positioning UIs.
    */
   public get viewport() {
     return {
-      width: this.app.renderer.width,
-      height: this.app.renderer.height,
+      width: this.renderer.width,
+      height: this.renderer.height,
     };
   }
 
   /**
-   * Set the active scene.
+   * Replace current controller with the new controller.
+   *
+   * @param controller The new controller
    */
-  public setScene(scene: Scene) {
-    if (this.scene != null) {
-      this.app.stage.removeChild(this.scene);
-      this.app.ticker.remove(this.scene.tick);
+  public setController(controller: Controller) {
+    // remove old view and tick
+    if (this.controller != null) {
+      this.stage.removeChild(this.controller);
+      this.ticker.remove(this.tick);
     }
 
-    this.scene = scene;
-    this.app.stage.addChild(scene);
-    scene.start();
-    this.app.ticker.add(scene.tick);
+    // set new view and tick
+    this.controller = controller;
+    this.tick = () => {
+      controller.tick();
+      Keyboard.shared.tick();
+    };
+    this.stage.addChild(controller);
+    controller.start();
+    this.ticker.add(this.tick);
+  }
+
+  /**
+   * Add a callback for pointerdown event. Helpful for detecting click
+   * event in the entire game window.
+   *
+   * @param cb The new callback to register
+   */
+  public addClickCallback(cb: () => void) {
+    this.clickCallbacks[cb.toString()] = cb;
+  }
+
+  public removeClickCallback(cb: () => void) {
+    delete this.clickCallbacks[cb.toString()];
   }
 }
 

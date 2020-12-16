@@ -1,13 +1,74 @@
 import * as PIXI from "pixi.js";
+import Collision from "./Collision";
+import Gravity from "./Gravity";
+import Keyboard from "./Keyboard";
+import Controller from "./Controller";
+import App from "./App";
 import Player from "./Player";
+import TextureManager from "./TextureManager";
 import io from "socket.io-client";
 import TileMap from "./TileMap";
 import Enemy from "./Enemy";
 import { PlayerJson } from "../server/Player";
 import { EnemyJson } from "../server/Enemy";
-import SoundManager from "./SoundManager";
-import SceneManager from "./SceneManager";
-import Text from "./Text";
+
+/**
+ * {@link PIXI.Container} with Parallax scrolling support.
+ */
+class Background extends PIXI.Container {
+  public tilingSprites: PIXI.TilingSprite[];
+
+  /**
+   * Create a {@link PIXI.Container} with tiling sprites as children.
+   * Assume all the background textures ordered such that the index
+   * represents the depth. Deeper texture is drawn earlier.
+   *
+   * @param width Width of the entire background
+   */
+  constructor(width: number) {
+    super();
+
+    const textures = TextureManager.shared.getGrasslandTextures();
+
+    this.tilingSprites = [];
+    for (let i = 0; i < textures.length; i++) {
+      const tilingSprite = new PIXI.TilingSprite(
+        textures[i],
+        width,
+        textures[i].height
+      );
+      tilingSprite.scale.set(3);
+      this.tilingSprites.push(tilingSprite);
+    }
+
+    this.addChild(...this.tilingSprites.slice().reverse());
+  }
+
+  /**
+   * Call this method every frame to make the background move
+   * as the player moves. Background with higher depth moves
+   * slower then background with lower depth. This creates an
+   * illusion that the background with higher depth is further
+   * away from the scene.
+   *
+   * @param player The sprite the background moves with respect to
+   */
+  public tick(player: Player) {
+    const viewportWidth = App.shared.viewport.width;
+    // check if the player is near the left world boundary
+    if (player.center.x > viewportWidth / 2) {
+      this.tilingSprites
+        .slice()
+        .reverse()
+        .forEach((ts, index) => {
+          ts.tilePosition.x =
+            -1 * (player.center.x - viewportWidth / 2) * index * index * 0.01;
+        });
+    } else {
+      this.tilingSprites.forEach((s) => (s.tilePosition.x = 0));
+    }
+  }
+}
 
 /**
  * A {@link PIXI.Container} where all the game objects live.
@@ -100,8 +161,8 @@ class Foreground extends PIXI.Container {
   public tick = () => {
     this.player.tick();
 
-    const viewportWidth = SceneManager.shared.viewport.width;
-    const viewportHeight = SceneManager.shared.viewport.height;
+    const viewportWidth = App.shared.viewport.width;
+    const viewportHeight = App.shared.viewport.height;
 
     // make the screen chase the player
     if (this.player.center.x > viewportWidth / 2) {
@@ -125,4 +186,37 @@ class Foreground extends PIXI.Container {
   };
 }
 
-export default Foreground;
+class PlayController extends Controller {
+  private background: Background;
+  private foreground: Foreground;
+
+  constructor(username: string) {
+    super();
+    this.background = new Background(1024);
+    this.foreground = new Foreground(username);
+
+    // The root containser contains two containers. Background container
+    // is where the background textures are stored (something you as a
+    // player can't interact with). Foreground container is where
+    // everything else is stored (game objects the player can interact
+    // with).
+    this.addChild(this.background);
+    this.addChild(this.foreground);
+  }
+
+  public start() {}
+
+  public tick = () => {
+    Gravity.shared.tick([this.foreground.player]);
+    Collision.shared.tick(
+      this.foreground.player,
+      Object.values(this.foreground.enemies),
+      this.foreground.tileMap
+    );
+    this.background.tick(this.foreground.player);
+    this.foreground.tick();
+    Keyboard.shared.tick();
+  };
+}
+
+export default PlayController;

@@ -6,20 +6,18 @@ import * as PIXI from "pixi.js";
  */
 class Text extends PIXI.Text {
   constructor(
-    text: string,
+    text?: string,
     options?: {
-      fontFamily?: string;
       fontSize?: number;
+      color?: number;
     }
   ) {
     super(
-      text,
+      text || "",
       new PIXI.TextStyle({
-        fontFamily: options?.fontFamily || "Roboto Mono",
+        fontFamily: "Roboto Mono",
         fontSize: options?.fontSize || 24,
-        fill: "#ffffff",
-        wordWrap: true,
-        wordWrapWidth: 440,
+        fill: options?.color || 0xffffff,
       })
     );
   }

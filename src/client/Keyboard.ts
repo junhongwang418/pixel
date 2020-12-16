@@ -1,25 +1,27 @@
 /**
- * A class to represent the keyboard key.
+ * A class that represents a keyboard key.
  */
 class Key {
-  public readonly key: string;
-
+  public readonly val: string;
   public isDown: boolean;
   public isUp: boolean;
   public isPressed: boolean;
+  public wasPressed: boolean;
 
   /**
-   * @param key String representation of the keyboard key
+   * @param val String representation of the keyboard key
    */
-  constructor(key: string) {
-    this.key = key;
+  constructor(val: string) {
+    this.val = val;
     this.isDown = false;
     this.isUp = false;
+    this.isPressed = false;
+    this.wasPressed = false;
   }
 }
 
 /**
- * A singleton class that represents the keyboard.
+ * A singleton class that manages `keydown` and `keyup` events.
  */
 class Keyboard {
   public static shared = new Keyboard();
@@ -31,6 +33,9 @@ class Keyboard {
       const key = this.keys[event.key] || new Key(event.key);
       key.isDown = true;
       key.isUp = false;
+      if (!key.wasPressed) {
+        key.isPressed = true;
+      }
       this.keys[event.key] = key;
     });
 
@@ -39,6 +44,8 @@ class Keyboard {
       const key = this.keys[event.key];
       key.isDown = false;
       key.isUp = true;
+      key.isPressed = false;
+      key.wasPressed = false;
     });
   }
 
@@ -49,6 +56,13 @@ class Keyboard {
     Object.values(this.keys).forEach((key) => {
       // clear key up event
       key.isUp = false;
+
+      if (key.isPressed) {
+        key.wasPressed = true;
+      }
+
+      // clear key press event
+      key.isPressed = false;
     });
   }
 
