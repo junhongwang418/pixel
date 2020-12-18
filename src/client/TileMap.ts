@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import BoundingBox from "./BoundingBox";
-import JsonManager from "./JsonManager";
+import JsonManager, { TileMapData } from "./JsonManager";
 import TextureManager from "./TextureManager";
 
 class Tile extends PIXI.Sprite {
@@ -11,13 +11,31 @@ class Tile extends PIXI.Sprite {
    *
    * @param id Tile id
    */
-  constructor(id: number) {
-    super(TextureManager.shared.getTileTextures()[id - 1]);
+  private constructor(texture: PIXI.Texture) {
+    super(texture);
     BoundingBox.shared.add(this);
+  }
+
+  public static fromId(id: number): Tile {
+    const numCols = 17;
+    const index = id - 1;
+    const size = 48;
+    const spritesheet = TextureManager.shared.getGrasslandTileSpritesheet();
+    const texture = new PIXI.Texture(
+      spritesheet.baseTexture,
+      new PIXI.Rectangle(
+        size * (index % numCols),
+        size * Math.floor(index / numCols),
+        size,
+        size
+      )
+    );
+    return new Tile(texture);
   }
 }
 
 class TileMap extends PIXI.Container {
+  public readonly data: TileMapData;
   private tiles: (Tile | null)[][];
 
   /**
@@ -27,6 +45,7 @@ class TileMap extends PIXI.Container {
     super();
 
     const tileMapData = JsonManager.shared.getTileMapData();
+    this.data = tileMapData;
 
     const height = tileMapData.layers[0].height;
     const width = tileMapData.layers[0].width;
@@ -38,7 +57,7 @@ class TileMap extends PIXI.Container {
       for (let j = 0; j < this.tiles[i].length; j++) {
         const tileId = data[i * width + j];
         if (tileId > 0) {
-          const tile = new Tile(tileId);
+          const tile = Tile.fromId(tileId);
           tile.x = j * Tile.SIZE;
           tile.y = i * Tile.SIZE;
           this.addChild(tile);

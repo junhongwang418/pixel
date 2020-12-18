@@ -27,7 +27,7 @@ app.use("/docs", express.static("dist/docs"));
 
 const loader = JsonLoader.shared;
 
-loader.add("dist/client/assets/map/map.json");
+loader.add("dist/client/assets/map/grassland/1.json");
 
 loader.load(() => {
   const players: { [id: string]: Player } = {};
@@ -52,52 +52,54 @@ loader.load(() => {
   }, 16.66);
 
   io.on("connection", (socket) => {
-    players[socket.id] = new Player(16, 0);
+    socket.on("init", (name) => {
+      players[socket.id] = new Player(name, 300, 0);
 
-    const playerJsons = {};
-    Object.entries(players).forEach(
-      ([id, player]) => (playerJsons[id] = player.json())
-    );
+      const playerJsons = {};
+      Object.entries(players).forEach(
+        ([id, player]) => (playerJsons[id] = player.json())
+      );
 
-    const enemyJsons = {};
-    Object.entries(enemies).forEach(
-      ([id, enemy]) => (enemyJsons[id] = enemy.json())
-    );
-
-    socket.emit("init", {
-      players: playerJsons,
-      enemies: enemyJsons,
-    });
-
-    socket.broadcast.emit("create", {
-      id: socket.id,
-      json: players[socket.id].json(),
-    });
-
-    socket.on("disconnect", () => {
-      socket.broadcast.emit("delete", {
-        id: socket.id,
-      });
-      delete players[socket.id];
-    });
-
-    socket.on("update-player", (json: PlayerJson) => {
-      players[socket.id].applyJson(json);
-
-      socket.broadcast.emit("update-player", {
-        id: socket.id,
-        json,
-      });
-    });
-
-    // send the latest enemy data to all the connections
-    setInterval(() => {
       const enemyJsons = {};
       Object.entries(enemies).forEach(
         ([id, enemy]) => (enemyJsons[id] = enemy.json())
       );
-      socket.emit("update-enemies", enemyJsons);
-    }, 16.66);
+
+      socket.emit("init", {
+        players: playerJsons,
+        enemies: enemyJsons,
+      });
+
+      socket.broadcast.emit("create", {
+        id: socket.id,
+        json: players[socket.id].json(),
+      });
+
+      socket.on("disconnect", () => {
+        socket.broadcast.emit("delete", {
+          id: socket.id,
+        });
+        delete players[socket.id];
+      });
+
+      socket.on("update-player", (json: PlayerJson) => {
+        players[socket.id].applyJson(json);
+
+        socket.broadcast.emit("update-player", {
+          id: socket.id,
+          json,
+        });
+      });
+
+      // send the latest enemy data to all the connections
+      setInterval(() => {
+        const enemyJsons = {};
+        Object.entries(enemies).forEach(
+          ([id, enemy]) => (enemyJsons[id] = enemy.json())
+        );
+        socket.emit("update-enemies", enemyJsons);
+      }, 16.66);
+    });
   });
 
   server.listen(port, () => {

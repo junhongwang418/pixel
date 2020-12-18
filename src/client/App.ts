@@ -9,8 +9,11 @@ import Keyboard from "./Keyboard";
  * Entry point of PixiJS application. Call {@link App.start} to
  * initializes the game and enter the game loop.
  *
- * This class manages the current {@link Controller} by the game. It
- * calls {@link Controller.tick} method every frame.
+ * This class manages the current {@link Controller} of the game. It
+ * invokes {@link Controller.tick} method every frame.
+ *
+ * {@link Keyboard.tick} is invoked every frame, so keyboard events
+ * are listened in any controller.
  */
 class App extends PIXI.Application {
   public static shared = new App();

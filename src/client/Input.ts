@@ -3,11 +3,19 @@ import App from "./App";
 import Keyboard from "./Keyboard";
 import Text from "./Text";
 
+interface InputOptions {
+  center?: boolean;
+  background?: number;
+  alpha?: number;
+}
+
 /**
  * PixiJS implementation of {@link HTMLInputElement}.
  */
 class Input extends PIXI.Container {
   private static readonly BACKSPACE_TIMER = 120;
+
+  private options: InputOptions;
 
   private text: Text;
   private cursorLine: PIXI.Graphics;
@@ -17,23 +25,31 @@ class Input extends PIXI.Container {
   private toggleCursorLineInterval: NodeJS.Timeout;
   private backspaceTimer: number;
 
-  private focused: boolean;
+  private _focused: boolean;
   private clicked: boolean;
 
-  constructor(maxChars: number) {
+  constructor(maxChars: number, options?: InputOptions) {
     super();
 
-    this.focused = false;
+    this.options = options || {};
+
+    this._focused = false;
     this.maxChars = maxChars;
 
     const fakeText = new Text("-".repeat(maxChars));
 
     this.box = new PIXI.Graphics();
     this.box.lineStyle(1, 0xffffff);
+    this.box.beginFill(0x000000, 0.72);
     this.box.drawRect(0, 0, fakeText.width + 16, fakeText.height);
+    this.box.endFill();
 
     this.text = new Text("");
-    this.text.x = this.box.width / 2;
+    if (this.options.center) {
+      this.text.x = this.box.width / 2;
+    } else {
+      this.text.x = 8;
+    }
 
     this.cursorLine = new PIXI.Graphics();
     this.cursorLine.lineStyle(1, 0xffffff);
@@ -46,7 +62,7 @@ class Input extends PIXI.Container {
     this.text.addChild(this.cursorLine);
 
     this.toggleCursorLineInterval = setInterval(() => {
-      if (this.focused) {
+      if (this._focused) {
         this.cursorLine.alpha = this.cursorLine.alpha ? 0 : 1;
       }
     }, 500);
@@ -84,7 +100,7 @@ class Input extends PIXI.Container {
   };
 
   public tick = () => {
-    if (!this.focused) {
+    if (!this._focused) {
       return;
     }
 
@@ -94,8 +110,10 @@ class Input extends PIXI.Container {
       const key = Keyboard.shared.getKey(c);
       if (key.isPressed && this.text.text.length < this.maxChars) {
         this.text.text += c;
-        this.cursorLine.x = this.text.width;
-        this.text.x = this.box.width / 2 - this.text.width / 2;
+        this.cursorLine.x = this.text.metrics.width;
+        if (this.options.center) {
+          this.text.x = this.box.width / 2 - this.text.metrics.width / 2;
+        }
       }
     });
 
@@ -103,8 +121,10 @@ class Input extends PIXI.Container {
     if (backspaceKey.isDown) {
       if (this.backspaceTimer === 0) {
         this.text.text = this.text.text.slice(0, -1);
-        this.cursorLine.x = this.text.width;
-        this.text.x = this.box.width / 2 - this.text.width / 2;
+        this.cursorLine.x = this.text.metrics.width;
+        if (this.options.center) {
+          this.text.x = this.box.width / 2 - this.text.metrics.width / 2;
+        }
         this.backspaceTimer = Input.BACKSPACE_TIMER;
       } else {
         this.backspaceTimer = Math.max(
@@ -136,8 +156,17 @@ class Input extends PIXI.Container {
    * @param focused Whether to focus or not
    */
   public focus(focused: boolean) {
-    this.focused = focused;
+    this._focused = focused;
     this.cursorLine.alpha = focused ? 1 : 0;
+  }
+
+  public get focused() {
+    return this._focused;
+  }
+
+  public clear() {
+    this.text.text = "";
+    this.cursorLine.x = this.text.metrics.width;
   }
 }
 

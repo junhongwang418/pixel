@@ -41,6 +41,37 @@ class NameTag extends PIXI.Container {
   }
 }
 
+class TextBubble extends PIXI.Container {
+  private box: PIXI.Graphics;
+  private text: Text;
+
+  constructor() {
+    super();
+    this.text = new Text("", { color: 0x000001, wrap: true });
+  }
+
+  public setText(text: string) {
+    if (this.box) {
+      this.removeChild(this.box);
+    }
+
+    this.text.text = text;
+
+    this.box = new PIXI.Graphics();
+    this.box.lineStyle(1, 0x000000);
+    this.box.beginFill(0xffffff);
+    this.box.drawRect(0, 0, this.text.width + 16, this.text.height + 8);
+    this.box.endFill();
+
+    this.addChild(this.box);
+    this.box.addChild(this.text);
+  }
+
+  public get value() {
+    return this.text.text;
+  }
+}
+
 /**
  * The sprite the user can control.
  */
@@ -61,29 +92,50 @@ class Player extends Sprite {
   private blinkInterval: NodeJS.Timeout | null;
   private nameTag: NameTag;
   private username: string;
+  private textBubble: TextBubble;
+  private textBubbleTimeout: NodeJS.Timeout | null;
 
-  public constructor(username: string) {
+  public constructor() {
     super(Player.getTextures(PlayerState.Idle));
     this.setState(PlayerState.Idle);
     this.landingElapsedMS = 0;
     this.punchElapsedMS = 0;
     this.blinkInterval = null;
-    this.username = username;
+    this.username = "";
+    this.textBubble = new TextBubble();
+    this.textBubbleTimeout = null;
 
     // position relative to player
     this.punchEffect = new Effect(48, -8);
 
-    this.nameTag = new NameTag(username);
+    this.nameTag = new NameTag(this.username);
     this.nameTag.x = this.width / 2 - this.nameTag.width / 2;
     this.nameTag.y = this.height + 4;
 
     this.addChild(this.nameTag);
   }
 
+  public say(text: string) {
+    this.textBubble.setText(text);
+    this.textBubble.x = this.width / 2 - this.textBubble.width / 2;
+    this.textBubble.y = -this.textBubble.height - 8;
+
+    if (this.textBubbleTimeout) {
+      clearTimeout(this.textBubbleTimeout);
+    } else {
+      this.addChild(this.textBubble);
+    }
+
+    this.textBubbleTimeout = setTimeout(() => {
+      this.removeChild(this.textBubble);
+      this.textBubbleTimeout = null;
+    }, 3000);
+  }
+
   /**
    * Update state for current frame.
    */
-  public tick = () => {
+  public tick = (ignoreKeyboard = false) => {
     super.tick();
 
     // this.nameTag.y = this.height / this.scale.y;
@@ -120,7 +172,9 @@ class Player extends Sprite {
     const keyJ = Keyboard.shared.getKey("j");
 
     // update velocity
-    if (keyA.isDown) {
+    if (ignoreKeyboard) {
+      this.vx = 0;
+    } else if (keyA.isDown) {
       this.vx = -Player.MOVE_SPEED;
       this.setFlipped(true);
     } else if (keyD.isDown) {
@@ -134,7 +188,9 @@ class Player extends Sprite {
     if (this.onGround) {
       if ([PlayerState.Jumping, PlayerState.Falling].includes(this.state)) {
         this.setState(PlayerState.Landing);
-      } else if (keyJ.isDown) {
+      } else if (ignoreKeyboard) {
+        this.setState(PlayerState.Idle);
+      } else if (keyJ.isPressed) {
         this.setState(PlayerState.Punch);
       } else if (keyW.isDown) {
         this.setState(PlayerState.Jumping);
@@ -157,7 +213,7 @@ class Player extends Sprite {
    */
   public applyJson(json: PlayerJson): void {
     super.applyJson(json);
-    const { state, blinking, name } = json;
+    const { state, blinking, name, saying } = json;
     this.setState(state);
     if (!this.blinking && blinking) {
       this.blink();
@@ -166,6 +222,15 @@ class Player extends Sprite {
     this.nameTag.setName(name);
     this.nameTag.x = this.width / 2 - this.nameTag.width / 2;
     this.nameTag.y = this.height + 4;
+
+    if (saying) {
+      this.textBubble.setText(saying);
+      this.textBubble.x = this.width / 2 - this.textBubble.width / 2;
+      this.textBubble.y = -this.textBubble.height - 8;
+      this.addChild(this.textBubble);
+    } else {
+      this.removeChild(this.textBubble);
+    }
   }
 
   /**
@@ -174,7 +239,7 @@ class Player extends Sprite {
    * @param json Properties to initialize the player
    */
   public static fromJson(json: PlayerJson): Player {
-    const player = new Player("");
+    const player = new Player();
     player.applyJson(json);
     return player;
   }
@@ -188,6 +253,7 @@ class Player extends Sprite {
       state: this.state,
       blinking: this.blinking,
       name: this.username,
+      saying: this.textBubbleTimeout ? this.textBubble.value : "",
     };
   }
 
@@ -301,6 +367,9 @@ class Player extends Sprite {
 
     this.nameTag.scale.x *= -1;
     this.nameTag.position.x = this.width / 2 - this.nameTag.width / 2;
+
+    this.textBubble.scale.x *= -1;
+    this.textBubble.position.x = this.width / 2 - this.textBubble.width / 2;
 
     super.setFlipped(flipped);
   }

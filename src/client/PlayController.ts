@@ -11,12 +11,14 @@ import TileMap from "./TileMap";
 import Enemy from "./Enemy";
 import { PlayerJson } from "../server/Player";
 import { EnemyJson } from "../server/Enemy";
+import Input from "./Input";
+import Button from "./Button";
 
 /**
- * {@link PIXI.Container} with Parallax scrolling support.
+ * View for {@link PlayController}. Handles parallax scrolling.
  */
-class Background extends PIXI.Container {
-  public tilingSprites: PIXI.TilingSprite[];
+class BackgroundView extends PIXI.Container {
+  private tilingSprites: PIXI.TilingSprite[];
 
   /**
    * Create a {@link PIXI.Container} with tiling sprites as children.
@@ -71,85 +73,21 @@ class Background extends PIXI.Container {
 }
 
 /**
- * A {@link PIXI.Container} where all the game objects live.
+ * View for {@link PlayController}. Renders the player, enemy, and
+ * tiles.
  */
-class Foreground extends PIXI.Container {
-  public player: Player;
-  public enemies: { [id: string]: Enemy };
-  public tileMap: TileMap;
-
-  private socket: SocketIOClient.Socket;
-
-  // All the external players
-  private players: { [id: string]: Player };
+class ForegroundView extends PIXI.Container {
+  private tileMap: TileMap;
 
   /**
    * Initialize all the game objects in the foreground.
+   *
+   * @param tileMap
    */
-  constructor(username: string) {
+  constructor(tileMap: TileMap) {
     super();
-
-    this.player = new Player(username);
-    this.socket = io();
-    this.players = {};
-    this.enemies = {};
-    this.tileMap = new TileMap();
-
-    this.addChild(this.tileMap);
-    this.addChild(this.player);
-
-    // SoundManager.shared.background.play();
-
-    // register callbacks on socket events
-    this.socket.on(
-      "init",
-      (data: {
-        players: { [id: string]: PlayerJson };
-        enemies: { [id: string]: EnemyJson };
-      }) => {
-        Object.entries(data.players).forEach(([id, json]) => {
-          if (id === this.socket.id) {
-            // this.player.applyJson(json);
-          } else {
-            const player = Player.fromJson(json);
-            this.players[id] = player;
-            this.addChild(player);
-          }
-        });
-        Object.entries(data.enemies).forEach(([id, json]) => {
-          const enemy = Enemy.fromJson(json);
-          this.enemies[id] = enemy;
-          this.addChild(enemy);
-        });
-      }
-    );
-
-    this.socket.on("create", (data: { id: number; json: PlayerJson }) => {
-      const { id, json } = data;
-      const player = Player.fromJson(json);
-      this.players[id] = player;
-      this.addChild(player);
-    });
-
-    this.socket.on(
-      "update-player",
-      (data: { id: number; json: PlayerJson }) => {
-        const { id, json } = data;
-        this.players[id].applyJson(json);
-      }
-    );
-
-    this.socket.on("update-enemies", (data: { [id: string]: EnemyJson }) => {
-      Object.entries(data).forEach(([id, json]) => {
-        this.enemies[id].applyJson(json);
-      });
-    });
-
-    this.socket.on("delete", (data: { id: number }) => {
-      const { id } = data;
-      this.removeChild(this.players[id]);
-      delete this.players[id];
-    });
+    this.tileMap = tileMap;
+    this.addChild(tileMap);
   }
 
   public start() {}
@@ -157,65 +95,156 @@ class Foreground extends PIXI.Container {
   /**
    * Call this method every frame to update all the game objects in the foreground
    * including the container itself.
+   *
+   * @param player
    */
-  public tick = () => {
-    this.player.tick();
-
+  public tick = (player: Player) => {
     const viewportWidth = App.shared.viewport.width;
     const viewportHeight = App.shared.viewport.height;
 
     // make the screen chase the player
-    if (this.player.center.x > viewportWidth / 2) {
-      this.pivot.x = this.player.center.x;
+    if (player.center.x > viewportWidth / 2) {
+      this.pivot.x = player.center.x;
       this.position.x = viewportWidth / 2;
     } else {
       this.pivot.x = 0;
       this.position.x = 0;
     }
 
-    if (viewportHeight - this.player.center.y > viewportHeight / 2) {
-      this.pivot.y = this.player.center.y;
-      this.position.y = viewportHeight / 2;
+    const mapOffset =
+      App.shared.viewport.height -
+      this.tileMap.data.height * this.tileMap.data.tileheight;
+
+    if (viewportHeight - player.center.y > viewportHeight / 2) {
+      this.pivot.y = player.center.y;
+      this.position.y = mapOffset + viewportHeight / 2;
     } else {
       this.pivot.y = 0;
-      this.position.y = 0;
+      this.position.y = mapOffset;
     }
-
-    // notify all other connections about the player data of this connection
-    this.socket.emit("update-player", this.player.json());
   };
 }
 
 class PlayController extends Controller {
-  private background: Background;
-  private foreground: Foreground;
+  private socket: SocketIOClient.Socket;
+
+  private backgroundView: BackgroundView;
+  private foregroundView: ForegroundView;
+
+  private chatInput: Input;
+  private chatSendButton: Button;
+
+  private tileMap: TileMap;
+  private player: Player;
+  private otherPlayers: { [id: string]: Player };
+  private enemies: { [id: string]: Enemy };
 
   constructor(username: string) {
     super();
-    this.background = new Background(1024);
-    this.foreground = new Foreground(username);
 
-    // The root containser contains two containers. Background container
-    // is where the background textures are stored (something you as a
-    // player can't interact with). Foreground container is where
-    // everything else is stored (game objects the player can interact
-    // with).
-    this.addChild(this.background);
-    this.addChild(this.foreground);
+    this.socket = io();
+    this.otherPlayers = {};
+    this.enemies = {};
+
+    this.tileMap = new TileMap();
+    this.player = new Player();
+    this.backgroundView = new BackgroundView(1024);
+    this.foregroundView = new ForegroundView(this.tileMap);
+
+    this.chatInput = new Input(25);
+    this.chatInput.y = App.shared.viewport.height - this.chatInput.height;
+    this.chatSendButton = new Button("Send");
+    this.chatSendButton.x = this.chatInput.x + this.chatInput.width;
+    this.chatSendButton.y = this.chatInput.y;
+    this.chatSendButton.onClick(() => {
+      if (this.chatInput.value) {
+        this.player.say(this.chatInput.value);
+        this.chatInput.clear();
+      }
+    });
+
+    this.addChild(this.backgroundView);
+    this.addChild(this.foregroundView);
+    this.addChild(this.chatInput);
+    this.addChild(this.chatSendButton);
+
+    // tell the server to log in a new user
+    this.socket.emit("init", username);
+
+    // register callbacks on socket events
+    this.socket.on("init", this.onInit);
+    this.socket.on("create", this.onCreate);
+    this.socket.on("update-player", this.onUpdatePlayer);
+    this.socket.on("update-enemies", this.onUpdateEnemies);
+    this.socket.on("delete", this.onDelete);
   }
 
   public start() {}
 
   public tick = () => {
-    Gravity.shared.tick([this.foreground.player]);
+    this.player.tick(this.chatInput.focused);
+    this.chatInput.tick();
+
+    Gravity.shared.tick([this.player]);
     Collision.shared.tick(
-      this.foreground.player,
-      Object.values(this.foreground.enemies),
-      this.foreground.tileMap
+      this.player,
+      Object.values(this.enemies),
+      this.tileMap
     );
-    this.background.tick(this.foreground.player);
-    this.foreground.tick();
-    Keyboard.shared.tick();
+    this.backgroundView.tick(this.player);
+    this.foregroundView.tick(this.player);
+
+    // notify all other connections about the player data of this connection
+    this.socket.emit("update-player", this.player.json());
+  };
+
+  private onInit = (data: {
+    players: { [id: string]: PlayerJson };
+    enemies: { [id: string]: EnemyJson };
+  }) => {
+    Object.entries(data.players).forEach(([id, json]) => {
+      if (id === this.socket.id) {
+        this.player.applyJson(json);
+        this.foregroundView.addChild(this.player);
+      } else {
+        const player = Player.fromJson(json);
+        this.otherPlayers[id] = player;
+        this.foregroundView.addChild(player);
+      }
+    });
+    Object.entries(data.enemies).forEach(([id, json]) => {
+      const enemy = Enemy.fromJson(json);
+      this.enemies[id] = enemy;
+      this.foregroundView.addChild(enemy);
+    });
+  };
+
+  private onCreate = (data: { id: number; json: PlayerJson }) => {
+    const { id, json } = data;
+
+    const player = Player.fromJson(json);
+    this.otherPlayers[id] = player;
+    this.foregroundView.addChild(player);
+  };
+
+  private onUpdatePlayer = (data: { id: number; json: PlayerJson }) => {
+    const { id, json } = data;
+    if (this.otherPlayers[id] == null) {
+      return;
+    }
+    this.otherPlayers[id].applyJson(json);
+  };
+
+  private onUpdateEnemies = (data: { [id: string]: EnemyJson }) => {
+    Object.entries(data).forEach(([id, json]) => {
+      this.enemies[id].applyJson(json);
+    });
+  };
+
+  private onDelete = (data: { id: number }) => {
+    const { id } = data;
+    this.foregroundView.removeChild(this.otherPlayers[id]);
+    delete this.otherPlayers[id];
   };
 }
 

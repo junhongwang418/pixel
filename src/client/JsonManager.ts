@@ -68,7 +68,7 @@ class JsonManager {
   }
 
   private getTileMapFilePath() {
-    return "assets/map/map.json";
+    return "assets/map/grassland/1.json";
   }
 }
 

@@ -25,7 +25,7 @@ class TextureManager {
     loader.add(this.getMrManLandingTextureFilePaths());
     loader.add(this.getMrManPunchTextureFilePaths());
     loader.add(this.getMrManHurtTextureFilePaths());
-    loader.add(this.getTileTextureFilePaths());
+    loader.add(this.getGrasslandTileSpritesheetFilePath());
     loader.add(this.getGrasslandTextureFilePaths());
     loader.add(this.getPunchEffectTextureFilePaths());
     loader.add(this.getBubIdleTextureFilePaths());
@@ -60,8 +60,8 @@ class TextureManager {
     return this.getTextures(this.getMrManHurtTextureFilePaths());
   }
 
-  public getTileTextures() {
-    return this.getTextures(this.getTileTextureFilePaths());
+  public getGrasslandTileSpritesheet() {
+    return this.getTexture(this.getGrasslandTileSpritesheetFilePath());
   }
 
   public getGrasslandTextures() {
@@ -132,13 +132,8 @@ class TextureManager {
     return ["assets/sprites/mrman/hurt.png"];
   }
 
-  private getTileTextureFilePaths() {
-    return [
-      "assets/tiles/tile_1.png",
-      "assets/tiles/tile_2.png",
-      "assets/tiles/tile_3.png",
-      "assets/tiles/tile_4.png",
-    ];
+  private getGrasslandTileSpritesheetFilePath() {
+    return "assets/map/grassland/tiles.png";
   }
 
   private getGrasslandTextureFilePaths() {
@@ -146,8 +141,6 @@ class TextureManager {
       "assets/backgrounds/grassland/0.png",
       "assets/backgrounds/grassland/1.png",
       "assets/backgrounds/grassland/2.png",
-      "assets/backgrounds/grassland/3.png",
-      "assets/backgrounds/grassland/4.png",
     ];
   }
 

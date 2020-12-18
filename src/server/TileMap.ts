@@ -18,7 +18,7 @@ class TileMap {
 
   public constructor() {
     const tileMapData = JsonLoader.shared.jsons[
-      "dist/client/assets/map/map.json"
+      "dist/client/assets/map/grassland/1.json"
     ] as TileMapData;
 
     const height = tileMapData.layers[0].height;
