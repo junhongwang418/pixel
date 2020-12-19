@@ -14,13 +14,13 @@ class LoadingView extends PIXI.Container {
   constructor() {
     super();
 
-    this.loadingText = new Text("Loading...");
+    this.loadingText = new Text("Loading...", { color: 0xffffff });
     this.loadingText.x =
       App.shared.viewport.width / 2 - this.loadingText.width / 2;
     this.loadingText.y =
       App.shared.viewport.height / 2 - this.loadingText.height;
 
-    this.percentageText = new Text();
+    this.percentageText = new Text("", { color: 0xffffff });
     this.setPercentage(0);
 
     this.addChild(this.loadingText);

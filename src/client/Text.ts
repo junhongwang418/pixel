@@ -12,6 +12,7 @@ class Text extends PIXI.Text {
       color?: number;
       wrap?: boolean;
       wrapWidth?: number;
+      align?: string;
     }
   ) {
     super(
@@ -19,9 +20,10 @@ class Text extends PIXI.Text {
       new PIXI.TextStyle({
         fontFamily: "Roboto Mono",
         fontSize: options?.fontSize || 16,
-        fill: options?.color || 0xffffff,
+        fill: options?.color || 0x000000,
         wordWrap: options?.wrap || false,
         wordWrapWidth: options?.wrapWidth || 200,
+        align: options?.align || "left",
       })
     );
   }

@@ -125,11 +125,28 @@ class ForegroundView extends PIXI.Container {
   };
 }
 
+/**
+ * View for {@link PlayController}. Renders the chat window.
+ */
+class UIView extends PIXI.Container {
+  constructor(chatInput: Input, chatSendButton: Button) {
+    super();
+
+    chatInput.y = App.shared.viewport.height - chatInput.height;
+    chatSendButton.x = chatInput.x + chatInput.width;
+    chatSendButton.y = chatInput.y;
+
+    this.addChild(chatInput);
+    this.addChild(chatSendButton);
+  }
+}
+
 class PlayController extends Controller {
   private socket: SocketIOClient.Socket;
 
   private backgroundView: BackgroundView;
   private foregroundView: ForegroundView;
+  private uiView: UIView;
 
   private chatInput: Input;
   private chatSendButton: Button;
@@ -148,25 +165,23 @@ class PlayController extends Controller {
 
     this.tileMap = new TileMap();
     this.player = new Player();
+    this.chatInput = new Input(25);
+    this.chatSendButton = new Button("Send", { backgroundAlpha: 0.72 });
+
     this.backgroundView = new BackgroundView(1024);
     this.foregroundView = new ForegroundView(this.tileMap);
+    this.uiView = new UIView(this.chatInput, this.chatSendButton);
 
-    this.chatInput = new Input(25);
-    this.chatInput.y = App.shared.viewport.height - this.chatInput.height;
-    this.chatSendButton = new Button("Send", { backgroundAlpha: 0.72 });
-    this.chatSendButton.x = this.chatInput.x + this.chatInput.width;
-    this.chatSendButton.y = this.chatInput.y;
     this.chatSendButton.onClick(() => {
-      if (this.chatInput.value) {
-        this.player.say(this.chatInput.value);
+      if (this.chatInput.getValue()) {
+        this.player.say(this.chatInput.getValue());
         this.chatInput.clear();
       }
     });
 
     this.addChild(this.backgroundView);
     this.addChild(this.foregroundView);
-    this.addChild(this.chatInput);
-    this.addChild(this.chatSendButton);
+    this.addChild(this.uiView);
 
     // tell the server to log in a new user
     this.socket.emit("init", username);
@@ -182,7 +197,7 @@ class PlayController extends Controller {
   public start() {}
 
   public tick = () => {
-    this.player.tick(this.chatInput.focused);
+    this.player.tick(this.chatInput.getFocused());
     this.chatInput.tick();
 
     Gravity.shared.tick([this.player]);

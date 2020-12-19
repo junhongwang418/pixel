@@ -1,3 +1,4 @@
+import e from "express";
 import * as PIXI from "pixi.js";
 import Keyboard from "./Keyboard";
 import Mouse from "./Mouse";
@@ -5,8 +6,6 @@ import Text from "./Text";
 
 interface InputOptions {
   center?: boolean;
-  background?: number;
-  alpha?: number;
   fontSize?: number;
 }
 
@@ -14,50 +13,27 @@ interface InputOptions {
  * View for {@link Input}.
  */
 class InputView extends PIXI.Container {
-  constructor() {
-    super();
-  }
-}
-
-/**
- * PixiJS implementation of {@link HTMLInputElement}.
- */
-class Input extends PIXI.Container {
-  private static readonly BACKSPACE_TIMER = 120;
-
-  private options: InputOptions;
+  private static readonly CURSOR_LINE_BLINK_INTERVAL_MS = 500;
 
   private text: Text;
   private cursorLine: PIXI.Graphics;
   private box: PIXI.Graphics;
-  private maxChars: number;
+  private cursorLineBlinkInterval: NodeJS.Timeout | null = null;
+  private options?: InputOptions;
 
-  private toggleCursorLineInterval: NodeJS.Timeout;
-  private backspaceTimer: number;
-
-  private _focused: boolean;
-  private clicked: boolean;
-
-  constructor(maxChars: number, options?: InputOptions) {
+  constructor(width: number, height: number, options?: InputOptions) {
     super();
 
-    this.options = options || {};
-
-    this._focused = false;
-    this.maxChars = maxChars;
-
-    const fakeText = new Text("-".repeat(maxChars), {
-      fontSize: options?.fontSize,
-    });
+    this.options = options;
 
     this.box = new PIXI.Graphics();
     this.box.lineStyle(1, 0xffffff);
     this.box.beginFill(0x000000, 0.72);
-    this.box.drawRect(0, 0, fakeText.width + 16, fakeText.height);
+    this.box.drawRect(0, 0, width + 16, height);
     this.box.endFill();
 
-    this.text = new Text("", { fontSize: options?.fontSize });
-    if (this.options.center) {
+    this.text = new Text("", { color: 0xffffff, fontSize: options?.fontSize });
+    if (options?.center) {
       this.text.x = this.box.width / 2;
     } else {
       this.text.x = 8;
@@ -65,27 +41,77 @@ class Input extends PIXI.Container {
 
     this.cursorLine = new PIXI.Graphics();
     this.cursorLine.lineStyle(1, 0xffffff);
-    this.cursorLine.lineTo(0, fakeText.height);
+    this.cursorLine.lineTo(0, height);
     this.cursorLine.closePath();
     this.cursorLine.alpha = 0;
 
     this.addChild(this.box);
     this.box.addChild(this.text);
     this.text.addChild(this.cursorLine);
+  }
 
-    this.toggleCursorLineInterval = setInterval(() => {
-      if (this._focused) {
+  public showCursorLink(show: boolean) {
+    this.cursorLine.alpha = show ? 1 : 0;
+    if (show) {
+      this.cursorLineBlinkInterval = setInterval(() => {
         this.cursorLine.alpha = this.cursorLine.alpha ? 0 : 1;
-      }
-    }, 500);
+      }, InputView.CURSOR_LINE_BLINK_INTERVAL_MS);
+    } else if (this.cursorLineBlinkInterval) {
+      clearInterval(this.cursorLineBlinkInterval);
+      this.cursorLineBlinkInterval = null;
+    }
+  }
 
-    this.backspaceTimer = 0;
+  public setText(text: string) {
+    this.text.text = text;
+    this.cursorLine.x = this.text.metrics.width;
+    if (this.options?.center) {
+      this.text.x = this.box.width / 2 - this.text.metrics.width / 2;
+    }
+  }
+
+  public destroy() {
+    if (this.cursorLineBlinkInterval) {
+      clearInterval(this.cursorLineBlinkInterval);
+    }
+    super.destroy();
+  }
+}
+
+/**
+ * PixiJS implementation of {@link HTMLInputElement}.
+ */
+class Input extends PIXI.Container {
+  private static readonly BACKSPACE_INTERVAL_MS = 120;
+  private static readonly CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 `-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?".split(
+    ""
+  );
+
+  private value = "";
+  private clicked = false;
+  private focused = false;
+  private backspaceElapsedMS = 0;
+
+  private maxChars: number;
+  private view: InputView;
+
+  constructor(maxChars: number, options?: InputOptions) {
+    super();
+
+    this.maxChars = maxChars;
+
+    const metrics = new Text("-".repeat(maxChars), {
+      fontSize: options?.fontSize,
+    }).metrics;
+
+    this.view = new InputView(metrics.width, metrics.height, options);
+    this.addChild(this.view);
 
     // register click events
     this.interactive = true;
     this.hitArea = new PIXI.Rectangle(0, 0, this.width, this.height);
-    this.on("pointerdown", this.onClickSelf);
-    Mouse.shared.addPointerDownCallback(this.onClickApp);
+    this.on("pointerdown", this.onPointerDown);
+    Mouse.shared.addPointerDownCallback(this.onPointerDownApp);
   }
 
   /**
@@ -93,70 +119,53 @@ class Input extends PIXI.Container {
    * the listener for keyboard events and allow the user to type into the
    * text box.
    */
-  private onClickSelf = () => {
-    this.focus(true);
+  private onPointerDown = () => {
+    this.setFocused(true);
     this.clicked = true;
   };
 
   /**
-   * Callback to trigger when the game window is clicked. Combined with
-   * {@link Input.onClickSelf}, this will deactivate the listener for
+   * Callback to trigger when the application window is clicked. Combined with
+   * {@link Input.onPointerDown}, this will deactivate the listener for
    * keyboard events when the user clicks outside the text box.
    */
-  private onClickApp = () => {
+  private onPointerDownApp = () => {
     if (this.clicked) {
       this.clicked = false;
     } else {
-      this.focus(false);
+      this.setFocused(false);
     }
   };
 
   public tick = () => {
-    if (!this._focused) {
+    if (!this.focused) {
       return;
     }
 
-    const inputChars =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 `-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?";
-    inputChars.split("").forEach((c) => {
+    Input.CHARACTERS.forEach((c) => {
       const key = Keyboard.shared.getKey(c);
-      if (key.isPressed && this.text.text.length < this.maxChars) {
-        this.text.text += c;
-        this.cursorLine.x = this.text.metrics.width;
-        if (this.options.center) {
-          this.text.x = this.box.width / 2 - this.text.metrics.width / 2;
-        }
+      if (key.isPressed && this.value.length < this.maxChars) {
+        this.value += c;
       }
     });
 
     const backspaceKey = Keyboard.shared.getKey("Backspace");
     if (backspaceKey.isDown) {
-      if (this.backspaceTimer === 0) {
-        this.text.text = this.text.text.slice(0, -1);
-        this.cursorLine.x = this.text.metrics.width;
-        if (this.options.center) {
-          this.text.x = this.box.width / 2 - this.text.metrics.width / 2;
-        }
-        this.backspaceTimer = Input.BACKSPACE_TIMER;
-      } else {
-        this.backspaceTimer = Math.max(
-          this.backspaceTimer - PIXI.Ticker.shared.elapsedMS,
-          0
-        );
+      this.backspaceElapsedMS += PIXI.Ticker.shared.elapsedMS;
+      if (this.backspaceElapsedMS >= Input.BACKSPACE_INTERVAL_MS) {
+        this.value = this.value.slice(0, -1);
+        this.backspaceElapsedMS = 0;
       }
     } else {
-      this.backspaceTimer = 0;
+      this.backspaceElapsedMS = Input.BACKSPACE_INTERVAL_MS;
     }
+
+    this.view.setText(this.value);
   };
 
-  public get value() {
-    return this.text.text;
-  }
-
   public destroy() {
-    clearInterval(this.toggleCursorLineInterval);
-    this.removeListener("pointerdown", this.onClickSelf);
-    Mouse.shared.removePointerDownCallback(this.onClickApp);
+    this.removeListener("pointerdown", this.onPointerDown);
+    Mouse.shared.removePointerDownCallback(this.onPointerDownApp);
     super.destroy();
   }
 
@@ -167,18 +176,26 @@ class Input extends PIXI.Container {
    *
    * @param focused Whether to focus or not
    */
-  public focus(focused: boolean) {
-    this._focused = focused;
-    this.cursorLine.alpha = focused ? 1 : 0;
+  public setFocused(focused: boolean) {
+    this.focused = focused;
+    this.view.showCursorLink(focused);
   }
 
-  public get focused() {
-    return this._focused;
+  public getFocused() {
+    return this.focused;
+  }
+
+  private setValue(value: string) {
+    this.value = value;
+    this.view.setText(this.value);
+  }
+
+  public getValue() {
+    return this.value;
   }
 
   public clear() {
-    this.text.text = "";
-    this.cursorLine.x = this.text.metrics.width;
+    this.setValue("");
   }
 }
 

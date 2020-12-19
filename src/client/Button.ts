@@ -26,7 +26,10 @@ class ButtonView extends PIXI.Container {
 
   constructor(text: string, options?: ButtonOptions) {
     super();
-    this.text = new Text(text, { fontSize: options?.fontSize });
+    this.text = new Text(text, {
+      color: 0xffffff,
+      fontSize: options?.fontSize,
+    });
     this.text.x = ButtonView.PADDING_X;
     this.text.y = ButtonView.PADDING_Y;
 

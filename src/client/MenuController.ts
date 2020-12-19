@@ -22,6 +22,7 @@ class MenuView extends PIXI.Container {
 
     this.promptText = new Text("Enter your name and click PLAY", {
       fontSize: 18,
+      color: 0xffffff,
     });
     this.promptText.x = viewportWidth / 2 - this.promptText.width / 2;
     this.promptText.y = viewportHeight / 2 + 100;
@@ -30,12 +31,13 @@ class MenuView extends PIXI.Container {
       `[How to Play]\nW: Jump\nA: Left\nD: Right\nJ: Attack`,
       {
         fontSize: 18,
+        color: 0xffffff,
       }
     );
     this.tutorialText.x = viewportWidth / 2 - this.tutorialText.width / 2;
     this.tutorialText.y = viewportHeight / 2 - 100;
 
-    this.nameText = new Text("Name");
+    this.nameText = new Text("Name", { color: 0xffffff });
     this.nameText.x = viewportWidth / 2 - this.nameText.width / 2;
     this.nameText.y = this.tutorialText.y - 100;
 
@@ -70,10 +72,10 @@ class MenuController extends Controller {
   }
 
   public start() {
-    this.nameInput.focus(true);
+    this.nameInput.setFocused(true);
     this.playButton.onClick(() => {
-      if (this.nameInput.value) {
-        App.shared.setController(new PlayController(this.nameInput.value));
+      if (this.nameInput.getValue()) {
+        App.shared.setController(new PlayController(this.nameInput.getValue()));
       }
     });
   }

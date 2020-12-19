@@ -15,7 +15,7 @@ class NameTag extends PIXI.Container {
   constructor(name: string) {
     super();
 
-    this.nameText = new Text(name);
+    this.nameText = new Text(name, { color: 0xffffff });
     this.nameText.x = 4;
     this.nameText.y = 2;
 
@@ -46,7 +46,7 @@ class TextBubble extends PIXI.Container {
 
   constructor() {
     super();
-    this.text = new Text("", { fontSize: 16, color: 0x000001, wrap: true });
+    this.text = new Text("", { wrap: true, align: "center" });
   }
 
   public setText(text: string) {
@@ -55,11 +55,24 @@ class TextBubble extends PIXI.Container {
     }
 
     this.text.text = text;
+    this.text.x = 8;
+    this.text.y = 4;
+
+    const boxWidth = this.text.width + 16;
+    const boxHeight = this.text.height + 8;
 
     this.box = new PIXI.Graphics();
     this.box.lineStyle(1, 0x000000);
     this.box.beginFill(0xffffff);
-    this.box.drawRect(0, 0, this.text.width + 16, this.text.height + 8);
+    this.box.moveTo(0, 0);
+    this.box.lineTo(boxWidth, 0);
+    this.box.lineTo(boxWidth, boxHeight);
+    this.box.lineTo(boxWidth / 2 + 8, boxHeight);
+    this.box.lineTo(boxWidth / 2 - 8, boxHeight + 8);
+    this.box.lineTo(boxWidth / 2 - 4, boxHeight);
+    this.box.lineTo(0, boxHeight);
+    this.box.lineTo(0, 0);
+    // this.box.drawRect(0, 0, this.text.width + 16, this.text.height + 8);
     this.box.endFill();
 
     this.addChild(this.box);
