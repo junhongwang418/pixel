@@ -15,20 +15,22 @@ class BoundingBox {
    * @param sprite The sprite to add bounding box to
    */
   public add(sprite: PIXI.Sprite) {
-    const box = new PIXI.Graphics();
-    const green = 0x00ff00;
-    box.lineStyle(2, 0xffffff);
-    box.tint = green;
-    box.drawRect(0, 0, sprite.width, sprite.height);
-    sprite.addChild(box);
+    if (process.env.MODE === "development") {
+      const box = new PIXI.Graphics();
+      const green = 0x00ff00;
+      box.lineStyle(2, 0xffffff);
+      box.tint = green;
+      box.drawRect(0, 0, sprite.width, sprite.height);
+      sprite.addChild(box);
 
-    // draw pivot point
-    const circle = new PIXI.Graphics();
-    const red = 0xff0000;
-    circle.lineStyle(2, 0xffffff);
-    circle.tint = red;
-    circle.drawCircle(0, 0, 1);
-    sprite.addChild(circle);
+      // draw pivot point
+      const circle = new PIXI.Graphics();
+      const red = 0xff0000;
+      circle.lineStyle(2, 0xffffff);
+      circle.tint = red;
+      circle.drawCircle(0, 0, 1);
+      sprite.addChild(circle);
+    }
   }
 }
 
