@@ -1,12 +1,22 @@
 import * as PIXI from "pixi.js";
-import App from "./App";
 import Keyboard from "./Keyboard";
+import Mouse from "./Mouse";
 import Text from "./Text";
 
 interface InputOptions {
   center?: boolean;
   background?: number;
   alpha?: number;
+  fontSize?: number;
+}
+
+/**
+ * View for {@link Input}.
+ */
+class InputView extends PIXI.Container {
+  constructor() {
+    super();
+  }
 }
 
 /**
@@ -36,7 +46,9 @@ class Input extends PIXI.Container {
     this._focused = false;
     this.maxChars = maxChars;
 
-    const fakeText = new Text("-".repeat(maxChars));
+    const fakeText = new Text("-".repeat(maxChars), {
+      fontSize: options?.fontSize,
+    });
 
     this.box = new PIXI.Graphics();
     this.box.lineStyle(1, 0xffffff);
@@ -44,7 +56,7 @@ class Input extends PIXI.Container {
     this.box.drawRect(0, 0, fakeText.width + 16, fakeText.height);
     this.box.endFill();
 
-    this.text = new Text("");
+    this.text = new Text("", { fontSize: options?.fontSize });
     if (this.options.center) {
       this.text.x = this.box.width / 2;
     } else {
@@ -73,7 +85,7 @@ class Input extends PIXI.Container {
     this.interactive = true;
     this.hitArea = new PIXI.Rectangle(0, 0, this.width, this.height);
     this.on("pointerdown", this.onClickSelf);
-    App.shared.addClickCallback(this.onClickApp);
+    Mouse.shared.addPointerDownCallback(this.onClickApp);
   }
 
   /**
@@ -144,7 +156,7 @@ class Input extends PIXI.Container {
   public destroy() {
     clearInterval(this.toggleCursorLineInterval);
     this.removeListener("pointerdown", this.onClickSelf);
-    App.shared.removeClickCallback(this.onClickApp);
+    Mouse.shared.removePointerDownCallback(this.onClickApp);
     super.destroy();
   }
 

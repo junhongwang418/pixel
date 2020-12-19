@@ -4,6 +4,7 @@ import JsonManager from "./JsonManager";
 import SoundManager from "./SoundManager";
 import Controller from "./Controller";
 import Keyboard from "./Keyboard";
+import Mouse from "./Mouse";
 
 /**
  * Entry point of PixiJS application. Call {@link App.start} to
@@ -16,10 +17,12 @@ import Keyboard from "./Keyboard";
  * are listened in any controller.
  */
 class App extends PIXI.Application {
+  private static CURSOR_DEFAULT_FILE_PATH = "assets/ui/cursor_default.png";
+
   public static shared = new App();
+
   private controller: Controller;
   private tick: () => void;
-  private clickCallbacks: { [key: string]: () => void };
 
   /**
    * The application will create a renderer using WebGL, if possible,
@@ -29,14 +32,11 @@ class App extends PIXI.Application {
   constructor() {
     super();
 
-    this.clickCallbacks = {};
-
     // Disable interpolation when scaling because this game uses pixelart.
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
     // set custom cursor
-    this.renderer.plugins.interaction.cursorStyles.default =
-      "url(assets/ui/cursor_default.png), auto";
+    this.renderer.plugins.interaction.cursorStyles.default = `url(${App.CURSOR_DEFAULT_FILE_PATH}), auto`;
 
     // The application will create a canvas element for you that you
     // can then insert into the DOM
@@ -46,7 +46,7 @@ class App extends PIXI.Application {
     SoundManager.shared.init();
     JsonManager.shared.init();
 
-    // listen to pointerdown event
+    // listen to mouse events
     this.stage.interactive = true;
     this.stage.hitArea = new PIXI.Rectangle(
       0,
@@ -54,14 +54,12 @@ class App extends PIXI.Application {
       this.viewport.width,
       this.viewport.height
     );
-    this.stage.on("pointerdown", () => {
-      Object.values(this.clickCallbacks).forEach((cb) => cb());
-    });
+
+    Mouse.shared.init(this.stage);
   }
 
   /**
-   * Get the application window size. The size will be useful for
-   * positioning UIs.
+   * Get the application window size.
    */
   public get viewport() {
     return {
@@ -91,20 +89,6 @@ class App extends PIXI.Application {
     this.stage.addChild(controller);
     controller.start();
     this.ticker.add(this.tick);
-  }
-
-  /**
-   * Add a callback for pointerdown event. Helpful for detecting click
-   * event in the entire game window.
-   *
-   * @param cb The new callback to register
-   */
-  public addClickCallback(cb: () => void) {
-    this.clickCallbacks[cb.toString()] = cb;
-  }
-
-  public removeClickCallback(cb: () => void) {
-    delete this.clickCallbacks[cb.toString()];
   }
 }
 

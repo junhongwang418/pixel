@@ -20,7 +20,9 @@ class MenuView extends PIXI.Container {
     const viewportWidth = App.shared.viewport.width;
     const viewportHeight = App.shared.viewport.height;
 
-    this.promptText = new Text("Enter your name and click PLAY");
+    this.promptText = new Text("Enter your name and click PLAY", {
+      fontSize: 18,
+    });
     this.promptText.x = viewportWidth / 2 - this.promptText.width / 2;
     this.promptText.y = viewportHeight / 2 + 100;
 
@@ -61,8 +63,8 @@ class MenuController extends Controller {
 
   constructor() {
     super();
-    this.nameInput = new Input(10, { center: true });
-    this.playButton = new Button("PLAY");
+    this.nameInput = new Input(10, { center: true, fontSize: 24 });
+    this.playButton = new Button("PLAY", { fontSize: 24 });
     this.menuView = new MenuView(this.nameInput, this.playButton);
     this.addChild(this.menuView);
   }

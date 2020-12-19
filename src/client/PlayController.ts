@@ -153,7 +153,7 @@ class PlayController extends Controller {
 
     this.chatInput = new Input(25);
     this.chatInput.y = App.shared.viewport.height - this.chatInput.height;
-    this.chatSendButton = new Button("Send");
+    this.chatSendButton = new Button("Send", { backgroundAlpha: 0.72 });
     this.chatSendButton.x = this.chatInput.x + this.chatInput.width;
     this.chatSendButton.y = this.chatInput.y;
     this.chatSendButton.onClick(() => {

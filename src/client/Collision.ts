@@ -21,7 +21,7 @@ class Collision {
   public tick(player: Player, enemies: Enemy[], tileMap: TileMap) {
     // prevent the player from going out of the world boundary
     if (player.scale.x < 0 && player.x - player.width < 0) {
-      player.x = Sprite.SIZE;
+      player.x = player.width;
     }
 
     // reset on ground

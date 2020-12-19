@@ -6,8 +6,6 @@ import BoundingBox from "./BoundingBox";
  * A sprite class with physics and animation support.
  */
 class Sprite extends PIXI.Sprite {
-  public static readonly SIZE = 16;
-
   private animationInterval: NodeJS.Timeout | null;
   private animationIndex = 0;
 

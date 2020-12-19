@@ -18,7 +18,7 @@ class Text extends PIXI.Text {
       text || "",
       new PIXI.TextStyle({
         fontFamily: "Roboto Mono",
-        fontSize: options?.fontSize || 24,
+        fontSize: options?.fontSize || 16,
         fill: options?.color || 0xffffff,
         wordWrap: options?.wrap || false,
         wordWrapWidth: options?.wrapWidth || 200,

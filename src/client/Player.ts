@@ -7,7 +7,6 @@ import TextureManager from "./TextureManager";
 import SoundManager from "./SoundManager";
 import { PlayerJson, PlayerState } from "../server/Player";
 import Text from "./Text";
-import Controller from "./Controller";
 
 class NameTag extends PIXI.Container {
   public box: PIXI.Graphics;
@@ -16,7 +15,7 @@ class NameTag extends PIXI.Container {
   constructor(name: string) {
     super();
 
-    this.nameText = new Text(name, { fontSize: 16 });
+    this.nameText = new Text(name);
     this.nameText.x = 4;
     this.nameText.y = 2;
 
@@ -47,7 +46,7 @@ class TextBubble extends PIXI.Container {
 
   constructor() {
     super();
-    this.text = new Text("", { color: 0x000001, wrap: true });
+    this.text = new Text("", { fontSize: 16, color: 0x000001, wrap: true });
   }
 
   public setText(text: string) {
