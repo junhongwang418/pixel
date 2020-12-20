@@ -94,8 +94,8 @@ class Player extends Sprite {
   private static readonly PUNCH_DURATION = 300;
   private static readonly BLINK_DURATION = 2000;
   private static readonly BLINK_INTERVAL = 60;
-  private static readonly HURT_IMPACT_X = 30;
-  private static readonly HURT_IMPACT_Y = 100;
+  private static readonly HURT_IMPACT_X = 60;
+  private static readonly HURT_IMPACT_Y = 200;
 
   private state: PlayerState;
   private punchEffect: Effect;

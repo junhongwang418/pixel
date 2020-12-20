@@ -172,12 +172,7 @@ class PlayController extends Controller {
     this.foregroundView = new ForegroundView(this.tileMap);
     this.uiView = new UIView(this.chatInput, this.chatSendButton);
 
-    this.chatSendButton.onClick(() => {
-      if (this.chatInput.getValue()) {
-        this.player.say(this.chatInput.getValue());
-        this.chatInput.clear();
-      }
-    });
+    this.chatSendButton.onClick(this.sendChat);
 
     this.addChild(this.backgroundView);
     this.addChild(this.foregroundView);
@@ -200,6 +195,13 @@ class PlayController extends Controller {
     this.player.tick(this.chatInput.getFocused());
     this.chatInput.tick();
 
+    if (this.chatInput.getFocused()) {
+      const enterKey = Keyboard.shared.getKey("Enter");
+      if (enterKey.isPressed) {
+        this.sendChat();
+      }
+    }
+
     Gravity.shared.tick([this.player]);
     Collision.shared.tick(
       this.player,
@@ -211,6 +213,13 @@ class PlayController extends Controller {
 
     // notify all other connections about the player data of this connection
     this.socket.emit("update-player", this.player.json());
+  };
+
+  private sendChat = () => {
+    if (this.chatInput.getValue()) {
+      this.player.say(this.chatInput.getValue());
+      this.chatInput.clear();
+    }
   };
 
   private onInit = (data: {
