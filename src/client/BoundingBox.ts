@@ -15,7 +15,8 @@ class BoundingBox {
    * @param sprite The sprite to add bounding box to
    */
   public add(sprite: PIXI.Sprite) {
-    if (process.env.MODE === "development") {
+    const isDev = process.env.MODE === "development";
+    if (isDev) {
       const box = new PIXI.Graphics();
       const green = 0x00ff00;
       box.lineStyle(2, 0xffffff);
