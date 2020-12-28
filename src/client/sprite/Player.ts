@@ -46,7 +46,7 @@ class TextBubble extends PIXI.Container {
 
   constructor() {
     super();
-    this.text = new Text("", { wrap: true, align: "center" });
+    this.text = new Text("");
   }
 
   public setText(text: string) {
