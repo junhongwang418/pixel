@@ -69,7 +69,6 @@ class MenuController extends Controller {
   constructor() {
     super();
     this.nameInput = new Input(10, {
-      center: true,
       color: Color.WHITE,
       fontSize: FontSize.Medium,
       borderWidth: 1,
