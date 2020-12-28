@@ -1,8 +1,10 @@
 import * as PIXI from "pixi.js";
-import App from "./App";
+import App from "../App";
 import MenuController from "./MenuController";
 import Controller from "./Controller";
-import Text from "./Text";
+import Text from "../ui/Text";
+import Div from "../ui/Div";
+import Color from "../Color";
 
 /**
  * View for {@link LoadingController}.

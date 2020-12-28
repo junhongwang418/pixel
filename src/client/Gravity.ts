@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import Sprite from "./Sprite";
+import Sprite from "./sprite/Sprite";
 
 /**
  * A singleton class that handles the gravity of the game.

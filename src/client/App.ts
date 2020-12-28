@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js";
 import TextureManager from "./TextureManager";
 import JsonManager from "./JsonManager";
 import SoundManager from "./SoundManager";
-import Controller from "./Controller";
+import Controller from "./controller/Controller";
 import Keyboard from "./Keyboard";
 import Mouse from "./Mouse";
 

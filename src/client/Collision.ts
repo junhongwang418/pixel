@@ -1,6 +1,6 @@
-import Enemy from "./Enemy";
-import Player from "./Player";
-import Sprite from "./Sprite";
+import Enemy from "./sprite/Enemy";
+import Player from "./sprite/Player";
+import Sprite from "./sprite/Sprite";
 import TileMap from "./TileMap";
 
 /**

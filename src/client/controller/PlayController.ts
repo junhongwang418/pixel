@@ -1,18 +1,19 @@
 import * as PIXI from "pixi.js";
-import Collision from "./Collision";
-import Gravity from "./Gravity";
-import Keyboard from "./Keyboard";
+import Collision from "../Collision";
+import Gravity from "../Gravity";
+import Keyboard from "../Keyboard";
 import Controller from "./Controller";
-import App from "./App";
-import Player from "./Player";
-import TextureManager from "./TextureManager";
+import App from "../App";
+import Player from "../sprite/Player";
+import TextureManager from "../TextureManager";
 import io from "socket.io-client";
-import TileMap from "./TileMap";
-import Enemy from "./Enemy";
-import { PlayerJson } from "../server/Player";
-import { EnemyJson } from "../server/Enemy";
-import Input from "./Input";
-import Button from "./Button";
+import TileMap from "../TileMap";
+import Enemy from "../sprite/Enemy";
+import { PlayerJson } from "../../server/Player";
+import { EnemyJson } from "../../server/Enemy";
+import Input from "../ui/Input";
+import Button from "../ui/Button";
+import Color from "../Color";
 
 /**
  * View for {@link PlayController}. Handles parallax scrolling.
@@ -165,8 +166,24 @@ class PlayController extends Controller {
 
     this.tileMap = new TileMap();
     this.player = new Player();
-    this.chatInput = new Input(25);
-    this.chatSendButton = new Button("Send", { backgroundAlpha: 0.72 });
+    this.chatInput = new Input(25, {
+      borderWidth: 1,
+      borderColor: Color.WHITE,
+      backgroundColor: Color.BLACK,
+      backgroundAlpha: 0.72,
+      paddingX: 16,
+      paddingY: 8,
+      color: Color.WHITE,
+    });
+    this.chatSendButton = new Button("Send", {
+      borderWidth: 1,
+      borderColor: Color.WHITE,
+      backgroundColor: Color.BLACK,
+      backgroundAlpha: 0.72,
+      color: Color.WHITE,
+      paddingX: 16,
+      paddingY: 8,
+    });
 
     this.backgroundView = new BackgroundView(1024);
     this.foregroundView = new ForegroundView(this.tileMap);
@@ -219,6 +236,7 @@ class PlayController extends Controller {
     if (this.chatInput.getValue()) {
       this.player.say(this.chatInput.getValue());
       this.chatInput.clear();
+      this.chatInput.setFocused(false);
     }
   };
 

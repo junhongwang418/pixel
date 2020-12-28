@@ -1,12 +1,12 @@
 import * as PIXI from "pixi.js";
 import Sprite from "./Sprite";
-import Keyboard from "./Keyboard";
+import Keyboard from "../Keyboard";
 import Effect from "./Effect";
 import Enemy from "./Enemy";
-import TextureManager from "./TextureManager";
-import SoundManager from "./SoundManager";
-import { PlayerJson, PlayerState } from "../server/Player";
-import Text from "./Text";
+import TextureManager from "../TextureManager";
+import SoundManager from "../SoundManager";
+import { PlayerJson, PlayerState } from "../../server/Player";
+import Text from "../ui/Text";
 
 class NameTag extends PIXI.Container {
   public box: PIXI.Graphics;

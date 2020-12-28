@@ -8,6 +8,8 @@
  * @see https://pixijs.io/examples/#/text/webfont.js
  */
 class WebFontLoader {
+  public static DEFAULT_FONT = "Roboto Mono";
+
   public static shared = new WebFontLoader();
 
   private fontFamilies: string[];

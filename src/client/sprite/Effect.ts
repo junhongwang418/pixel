@@ -1,5 +1,5 @@
 import Sprite from "./Sprite";
-import TextureManager from "./TextureManager";
+import TextureManager from "../TextureManager";
 
 /**
  * A player attack effect. Enemies receive damages if

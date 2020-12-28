@@ -49,7 +49,7 @@ class App {
         Object.values(this.enemies).forEach((e) => e.tick());
       }, 16.66);
 
-      io.on("connection", (socket) => this.onConnection(socket));
+      io.on("connection", this.onConnection);
 
       server.listen(port, () => {
         console.log(`Listening on port ${port}`);
@@ -84,7 +84,7 @@ class App {
       json: this.players[socket.id].json(),
     });
 
-    socket.on("disconnect", this.onDisconnect);
+    socket.on("disconnect", () => this.onDisconnect(socket));
     socket.on("update-player", (json: PlayerJson) =>
       this.onUpdatePlayer(socket, json)
     );

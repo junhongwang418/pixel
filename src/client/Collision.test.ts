@@ -1,4 +1,4 @@
-import Sprite from "./Sprite";
+import Sprite from "./sprite/Sprite";
 import Collision from "./Collision";
 
 test("overlap returns true when two sprites intersect", () => {

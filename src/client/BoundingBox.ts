@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import Color from "./Color";
 
 /**
  * A singleton class that handles drawing bounding boxes around sprites
@@ -18,17 +19,15 @@ class BoundingBox {
     const isDev = process.env.MODE === "development";
     if (isDev) {
       const box = new PIXI.Graphics();
-      const green = 0x00ff00;
       box.lineStyle(2, 0xffffff);
-      box.tint = green;
+      box.tint = Color.GREEN;
       box.drawRect(0, 0, sprite.width, sprite.height);
       sprite.addChild(box);
 
       // draw pivot point
       const circle = new PIXI.Graphics();
-      const red = 0xff0000;
       circle.lineStyle(2, 0xffffff);
-      circle.tint = red;
+      circle.tint = Color.RED;
       circle.drawCircle(0, 0, 1);
       sprite.addChild(circle);
     }

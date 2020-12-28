@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
-import { SpriteJson } from "../server/Sprite";
-import BoundingBox from "./BoundingBox";
+import { SpriteJson } from "../../server/Sprite";
+import BoundingBox from "../BoundingBox";
 
 /**
  * A sprite class with physics and animation support.

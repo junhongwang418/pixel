@@ -8,6 +8,8 @@ class Color {
   public static readonly LIGHT_BLUE = 0x3fc1c9;
   public static readonly WHITE = 0xf5f5f5;
   public static readonly RED = 0xfc5185;
+  public static readonly GREEN = 0x00ff00;
+  public static readonly BLACK = 0x000000;
 }
 
 export default Color;
