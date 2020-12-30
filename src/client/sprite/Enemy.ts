@@ -1,6 +1,6 @@
 import Sprite from "./Sprite";
-import { EnemyState, EnemyJson } from "../../server/sprite/Enemy";
 import TextureManager from "../TextureManager";
+import { EnemyJson, EnemyState } from "../../common/Enemy";
 
 /**
  * The sprite the player can attack.

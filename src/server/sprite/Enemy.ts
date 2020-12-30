@@ -1,14 +1,6 @@
+import { EnemyJson, EnemyState } from "../../common/Enemy";
 import Random from "../Random";
-import Sprite, { SpriteJson } from "./Sprite";
-
-export enum EnemyState {
-  Idle,
-  Run,
-}
-
-export interface EnemyJson extends SpriteJson {
-  state: EnemyState;
-}
+import Sprite from "./Sprite";
 
 class Enemy extends Sprite {
   private static readonly MOVE_SPEED = 60;

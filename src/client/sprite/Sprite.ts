@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { SpriteJson } from "../../server/sprite/Sprite";
+import { SpriteJson } from "../../common/Sprite";
 import BoundingBox from "../BoundingBox";
 
 /**

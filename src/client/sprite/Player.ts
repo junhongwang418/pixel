@@ -5,8 +5,8 @@ import Effect from "./Effect";
 import Enemy from "./Enemy";
 import TextureManager from "../TextureManager";
 import SoundManager from "../SoundManager";
-import { PlayerJson, PlayerState } from "../../server/sprite/Player";
 import Text from "../ui/Text";
+import { PlayerJson, PlayerState } from "../../common/Player";
 
 class NameTag extends PIXI.Container {
   public box: PIXI.Graphics;

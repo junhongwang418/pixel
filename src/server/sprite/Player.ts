@@ -1,42 +1,7 @@
+import { PlayerInput, PlayerJson, PlayerState } from "../../common/Player";
 import App from "../App";
 import Enemy from "./Enemy";
-import Sprite, { SpriteJson } from "./Sprite";
-
-export enum PlayerState {
-  Idle,
-  Run,
-  Jumping,
-  Falling,
-  Landing,
-  Punch,
-  Hurt,
-}
-
-export interface PlayerJson extends SpriteJson {
-  name: string;
-  state: PlayerState;
-  blinking: boolean;
-  saying: string;
-}
-
-export interface PlayerInput {
-  a: {
-    isDown: boolean;
-    isPressed: boolean;
-  };
-  d: {
-    isDown: boolean;
-    isPressed: boolean;
-  };
-  w: {
-    isDown: boolean;
-    isPressed: boolean;
-  };
-  j: {
-    isDown: boolean;
-    isPressed: boolean;
-  };
-}
+import Sprite from "./Sprite";
 
 class Player extends Sprite {
   private static readonly LANDING_DURATION = 100;

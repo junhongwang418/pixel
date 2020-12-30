@@ -1,8 +1,7 @@
 import * as PIXI from "pixi.js";
 
-import { ITile, ITileGenerator } from "../server/TileMap";
+import { ITile, ITileGenerator } from "./TileMap";
 import BoundingBox from "./BoundingBox";
-import Controller from "./controller/Controller";
 import TextureManager from "./TextureManager";
 
 class Tile extends PIXI.Sprite implements ITile {
