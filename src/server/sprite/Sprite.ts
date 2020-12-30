@@ -1,4 +1,4 @@
-import { SpriteJson } from "../../common/Sprite";
+import { SpriteJson } from "../../common/sprite/Sprite";
 
 class Sprite {
   public static readonly SIZE = 48;

@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { TileMapData } from "./TileMap";
+import { TileMapData } from "../../common/TileMap";
 
 /**
  * A singleton class that manages all json files used in the game

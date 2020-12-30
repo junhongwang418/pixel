@@ -1,5 +1,5 @@
-import App from "./App";
-import Sprite from "./sprite/Sprite";
+import App from "../App";
+import Sprite from "../sprite/Sprite";
 
 /**
  * A singleton class that handles the gravity of the game.

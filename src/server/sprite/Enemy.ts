@@ -1,4 +1,4 @@
-import { EnemyJson, EnemyState } from "../../common/Enemy";
+import { EnemyJson, EnemyState } from "../../common/sprite/Enemy";
 import Random from "../Random";
 import Sprite from "./Sprite";
 

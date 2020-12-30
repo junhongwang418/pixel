@@ -1,19 +1,19 @@
 import * as PIXI from "pixi.js";
-import Keyboard from "../Keyboard";
+import Keyboard from "../input/Keyboard";
 import Controller from "./Controller";
 import App from "../App";
 import Player from "../sprite/Player";
-import TextureManager from "../TextureManager";
+import TextureManager from "../manager/TextureManager";
 import io from "socket.io-client";
-import TileMap from "../TileMap";
+import TileMap from "../../common/TileMap";
 import Enemy from "../sprite/Enemy";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Color from "../Color";
 import TileGenerator from "../TileGenerator";
-import JsonManager from "../JsonManager";
-import { EnemyJson } from "../../common/Enemy";
-import { PlayerJson } from "../../common/Player";
+import JsonManager from "../manager/JsonManager";
+import { EnemyJson } from "../../common/sprite/Enemy";
+import { PlayerJson } from "../../common/sprite/Player";
 
 /**
  * View for {@link PlayController}. Handles parallax scrolling.

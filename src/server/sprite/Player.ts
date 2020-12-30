@@ -1,4 +1,8 @@
-import { PlayerInput, PlayerJson, PlayerState } from "../../common/Player";
+import {
+  PlayerInput,
+  PlayerJson,
+  PlayerState,
+} from "../../common/sprite/Player";
 import App from "../App";
 import Enemy from "./Enemy";
 import Sprite from "./Sprite";

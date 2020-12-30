@@ -2,14 +2,14 @@ import express from "express";
 import http from "http";
 import SocketIO, { Socket } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
-import Gravity from "./Gravity";
-import Collision from "./Collision";
+import Gravity from "./physics/Gravity";
+import Collision from "./physics/Collision";
 import Player from "./sprite/Player";
 import Enemy from "./sprite/Enemy";
 import JsonLoader from "./JsonLoader";
-import TileMap, { TileMapData } from "./TileMap";
+import TileMap, { TileMapData } from "../common/TileMap";
 import TileGenerator from "./TileGenerator";
-import { PlayerInput } from "../common/Player";
+import { PlayerInput } from "../common/sprite/Player";
 
 /**
  * Entry point of the game server. Initializes the game and

@@ -1,4 +1,4 @@
-import { ITile, ITileGenerator } from "./TileMap";
+import { ITile, ITileGenerator } from "../common/TileMap";
 
 import Sprite from "./sprite/Sprite";
 

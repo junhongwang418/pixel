@@ -1,7 +1,7 @@
-import Enemy from "./sprite/Enemy";
-import Player from "./sprite/Player";
-import Sprite from "./sprite/Sprite";
-import TileMap from "./TileMap";
+import Enemy from "../sprite/Enemy";
+import Player from "../sprite/Player";
+import Sprite from "../sprite/Sprite";
+import TileMap from "../../common/TileMap";
 
 /**
  * A singleton class that handles the collision detection of the game.

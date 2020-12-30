@@ -1,5 +1,5 @@
 import Collision from "./Collision";
-import Sprite from "./sprite/Sprite";
+import Sprite from "../sprite/Sprite";
 
 test("overlap returns true when two sprites intersect", () => {
   const s1 = createSprite(0, 0, 16, 16);

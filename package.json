@@ -1,7 +1,7 @@
 {
   "name": "pixel",
   "version": "1.0.0",
-  "description": "",
+  "description": "2D side scrolling multiplayer game",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
@@ -23,7 +23,7 @@
     "url": "git+https://github.com/ioneone/pixel.git"
   },
   "author": "Junhong Wang",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/ioneone/pixel/issues"
   },

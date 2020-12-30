@@ -1,10 +1,10 @@
 import * as PIXI from "pixi.js";
-import TextureManager from "./TextureManager";
-import JsonManager from "./JsonManager";
-import SoundManager from "./SoundManager";
+import TextureManager from "./manager/TextureManager";
+import JsonManager from "./manager/JsonManager";
+import SoundManager from "./manager/SoundManager";
 import Controller from "./controller/Controller";
-import Keyboard from "./Keyboard";
-import Mouse from "./Mouse";
+import Keyboard from "./input/Keyboard";
+import Mouse from "./input/Mouse";
 
 /**
  * Entry point of PixiJS application. Call {@link App.start} to

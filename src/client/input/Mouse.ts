@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import App from "./App";
+import App from "../App";
 
 /**
  * A singleton class that manages mouse events on the application window.

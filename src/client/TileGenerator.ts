@@ -1,8 +1,8 @@
 import * as PIXI from "pixi.js";
 
-import { ITile, ITileGenerator } from "./TileMap";
+import { ITile, ITileGenerator } from "../common/TileMap";
 import BoundingBox from "./BoundingBox";
-import TextureManager from "./TextureManager";
+import TextureManager from "./manager/TextureManager";
 
 class Tile extends PIXI.Sprite implements ITile {
   public static readonly SIZE = 48;

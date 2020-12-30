@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
-import Keyboard from "../Keyboard";
-import Mouse from "../Mouse";
+import Keyboard from "../input/Keyboard";
+import Mouse from "../input/Mouse";
 import Paragraph, { ParagraphOptions } from "./Paragraph";
 
 interface InputCursorOptions {
