@@ -4,11 +4,12 @@ import SocketIO, { Socket } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
 import Gravity from "./Gravity";
 import Collision from "./Collision";
-import Player, { PlayerInput } from "./sprite/Player";
+import Player from "./sprite/Player";
 import Enemy from "./sprite/Enemy";
 import JsonLoader from "./JsonLoader";
 import TileMap, { TileMapData } from "./TileMap";
 import TileGenerator from "./TileGenerator";
+import { PlayerInput } from "../common/Player";
 
 /**
  * Entry point of the game server. Initializes the game and
