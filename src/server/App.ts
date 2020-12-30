@@ -1,82 +1,122 @@
 import express from "express";
 import http from "http";
-import SocketIO from "socket.io";
+import SocketIO, { Socket } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
 import Gravity from "./Gravity";
 import Collision from "./Collision";
-import Player, { PlayerJson } from "./Player";
-import Enemy from "./Enemy";
+import Player, { PlayerInput } from "./sprite/Player";
+import Enemy from "./sprite/Enemy";
 import JsonLoader from "./JsonLoader";
-import TileMap from "./TileMap";
+import TileMap, { TileMapData } from "./TileMap";
+import TileGenerator from "./TileGenerator";
 
+/**
+ * Entry point of the game server. Initializes the game and
+ * enter the game loop.
+ */
 class App {
+  public static readonly TICK_INTERVAL_MS = 16.66; // Equivalent to FPS 60
+
+  private static readonly PORT = process.env.PORT || 3000;
+
   private players: { [id: string]: Player };
   private enemies: { [id: string]: Enemy };
+
+  private server: http.Server;
+  private io: SocketIO.Server;
 
   constructor() {
     this.players = {};
     this.enemies = {};
 
     const app = express();
-    const server = http.createServer(app);
-    const io = new SocketIO.Server(server);
 
-    const port = process.env.PORT || 3000;
+    this.server = http.createServer(app);
+    this.io = new SocketIO.Server(this.server);
 
+    // Serve client code at root
     app.use(express.static("dist/client"));
+
+    // Serve documentation at /docs
     app.use("/docs", express.static("dist/docs"));
 
     const loader = JsonLoader.shared;
-
     loader.add("dist/client/assets/map/grassland/1.json");
-
-    loader.load(() => {
-      // create enemies
-      for (let i = 0; i < 10; i++) {
-        const randomX = 100 + Math.random() * 300;
-        const enemy = new Enemy(randomX);
-        enemy.x = randomX;
-        this.enemies[uuidv4()] = enemy;
-      }
-
-      const tileMap = new TileMap();
-
-      setInterval(() => {
-        // The client handles player ticks. The server
-        // handles all the enemy ticks.
-        Gravity.shared.tick(Object.values(this.enemies));
-        Collision.shared.tick(Object.values(this.enemies), tileMap);
-        Object.values(this.enemies).forEach((e) => e.tick());
-      }, 16.66);
-
-      io.on("connection", this.onConnection);
-
-      server.listen(port, () => {
-        console.log(`Listening on port ${port}`);
-      });
-    });
+    loader.load(this.onLoad);
   }
 
-  private onConnection = (socket) => {
-    socket.on("init", (name) => this.onInit(socket, name));
+  /**
+   * {@link App.onLoad} is called once all the resources needed
+   * for the game are loaded into memory.
+   */
+  private onLoad = () => {
+    // create 10 enemies at random locations
+    for (let i = 0; i < 10; i++) {
+      const randomX = 100 + Math.random() * 300;
+      const enemy = new Enemy(randomX);
+      enemy.x = randomX;
+      // enemy id is random
+      this.enemies[uuidv4()] = enemy;
+    }
+
+    setInterval(this.tick, App.TICK_INTERVAL_MS);
+
+    this.io.on("connection", this.onConnection);
+
+    this.server.listen(App.PORT, () => {
+      console.log(`Listening on port ${App.PORT}`);
+    });
   };
 
-  private onInit = (socket, name) => {
+  /**
+   * {@link App.tick} is called every frame to update the game state.
+   */
+  private tick = () => {
+    Gravity.shared.tick([
+      ...Object.values(this.players),
+      ...Object.values(this.enemies),
+    ]);
+
+    const loader = JsonLoader.shared;
+    const tileMap = new TileMap(
+      loader.jsons["dist/client/assets/map/grassland/1.json"] as TileMapData,
+      TileGenerator.shared
+    );
+    Collision.shared.tick(
+      Object.values(this.players),
+      Object.values(this.enemies),
+      tileMap
+    );
+
+    Object.values(this.enemies).forEach((e) => e.tick());
+    Object.values(this.players).forEach((p) => p.tick());
+  };
+
+  /**
+   * {@link App.onConnection} is called when a new client connects with
+   * the server.
+   *
+   * @param socket The connection established between the client and the server
+   */
+  private onConnection = (socket: Socket) => {
+    socket.on("init", (name) => this.onInit(socket, name));
+    socket.on("disconnect", () => this.onDisconnect(socket));
+  };
+
+  /**
+   * {@link App.onInit} is called when the client emits an `init` event
+   * to the server.
+   *
+   * @param socket The connection between the client and the server
+   * @param name The username the client passed along with `init` event
+   */
+  private onInit = (socket: Socket, name: string) => {
+    // any new player starts at x = 300 and y = 0 for now
     this.players[socket.id] = new Player(name, 300, 0);
 
-    const playerJsons = {};
-    Object.entries(this.players).forEach(
-      ([id, player]) => (playerJsons[id] = player.json())
-    );
-
-    const enemyJsons = {};
-    Object.entries(this.enemies).forEach(
-      ([id, enemy]) => (enemyJsons[id] = enemy.json())
-    );
-
     socket.emit("init", {
-      players: playerJsons,
-      enemies: enemyJsons,
+      players: this.playerJsons,
+      enemies: this.enemyJsons,
     });
 
     socket.broadcast.emit("create", {
@@ -84,35 +124,58 @@ class App {
       json: this.players[socket.id].json(),
     });
 
-    socket.on("disconnect", () => this.onDisconnect(socket));
-    socket.on("update-player", (json: PlayerJson) =>
-      this.onUpdatePlayer(socket, json)
-    );
+    socket.on("player-input", (input) => this.onPlayerInput(socket, input));
+    socket.on("chat", (text) => this.onChat(socket, text));
 
-    // send the latest enemy data to all the connections
     setInterval(() => {
-      const enemyJsons = {};
-      Object.entries(this.enemies).forEach(
-        ([id, enemy]) => (enemyJsons[id] = enemy.json())
-      );
-      socket.emit("update-enemies", enemyJsons);
-    }, 16.66);
+      socket.emit("update-players", this.playerJsons);
+      socket.emit("update-enemies", this.enemyJsons);
+    }, App.TICK_INTERVAL_MS);
   };
 
-  private onDisconnect = (socket) => {
+  /**
+   * {@link App.onDisconnect} is called when the client closes the tab
+   * and emits a `disconnect` event to the server.
+   *
+   * @param socket The old connection between the client and the sever
+   */
+  private onDisconnect = (socket: Socket) => {
     socket.broadcast.emit("delete", {
       id: socket.id,
     });
     delete this.players[socket.id];
   };
 
-  private onUpdatePlayer = (socket, json: PlayerJson) => {
-    this.players[socket.id].applyJson(json);
-    socket.broadcast.emit("update-player", {
-      id: socket.id,
-      json,
-    });
+  /**
+   * {@link App.onPlayerInput} is called when the client emits a
+   * `player-input` event along with their keystroke data.
+   *
+   * @param socket The connection between the client and the server
+   * @param input The keystroke data
+   */
+  private onPlayerInput = (socket: Socket, input: PlayerInput) => {
+    this.players[socket.id].input(input);
   };
+
+  private onChat = (socket: Socket, text: string) => {
+    this.players[socket.id].say(text);
+  };
+
+  private get playerJsons() {
+    const jsons = {};
+    Object.entries(this.players).forEach(
+      ([id, player]) => (jsons[id] = player.json())
+    );
+    return jsons;
+  }
+
+  private get enemyJsons() {
+    const jsons = {};
+    Object.entries(this.enemies).forEach(
+      ([id, enemy]) => (jsons[id] = enemy.json())
+    );
+    return jsons;
+  }
 }
 
 export default App;

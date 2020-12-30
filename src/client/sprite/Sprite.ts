@@ -1,9 +1,9 @@
 import * as PIXI from "pixi.js";
-import { SpriteJson } from "../../server/Sprite";
+import { SpriteJson } from "../../server/sprite/Sprite";
 import BoundingBox from "../BoundingBox";
 
 /**
- * A sprite class with physics and animation support.
+ * A {@link PIXI.Sprite} with physics and animation support.
  */
 class Sprite extends PIXI.Sprite {
   private animationInterval: NodeJS.Timeout | null;
@@ -23,11 +23,6 @@ class Sprite extends PIXI.Sprite {
     this.texture = this.textures[0];
     this.play();
     BoundingBox.shared.add(this);
-  }
-
-  public tick() {
-    this.x += (this.vx * PIXI.Ticker.shared.elapsedMS) / 1000;
-    this.y += (this.vy * PIXI.Ticker.shared.elapsedMS) / 1000;
   }
 
   /**
@@ -115,7 +110,7 @@ class Sprite extends PIXI.Sprite {
     this.play();
   }
 
-  protected get flipped() {
+  public get flipped() {
     return this.scale.x < 0;
   }
 

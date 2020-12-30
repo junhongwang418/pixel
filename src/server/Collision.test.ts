@@ -1,5 +1,5 @@
-import Sprite from "./sprite/Sprite";
 import Collision from "./Collision";
+import Sprite from "./sprite/Sprite";
 
 test("overlap returns true when two sprites intersect", () => {
   const s1 = createSprite(0, 0, 16, 16);
@@ -25,7 +25,8 @@ test("overlap returns false when two sprites do not intersect", () => {
 function createSprite(x: number, y: number, width: number, height: number) {
   // empty texture
   const sprite = new Sprite();
-  sprite.position.set(x, y);
+  sprite.x = x;
+  sprite.y = y;
   sprite.width = width;
   sprite.height = height;
   return sprite;

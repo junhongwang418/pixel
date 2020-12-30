@@ -1,19 +1,19 @@
 import * as PIXI from "pixi.js";
-import Collision from "../Collision";
-import Gravity from "../Gravity";
 import Keyboard from "../Keyboard";
 import Controller from "./Controller";
 import App from "../App";
 import Player from "../sprite/Player";
 import TextureManager from "../TextureManager";
 import io from "socket.io-client";
-import TileMap from "../TileMap";
+import TileMap from "../../server/TileMap";
 import Enemy from "../sprite/Enemy";
-import { PlayerJson } from "../../server/Player";
-import { EnemyJson } from "../../server/Enemy";
+import { PlayerJson } from "../../server/sprite/Player";
+import { EnemyJson } from "../../server/sprite/Enemy";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import Color from "../Color";
+import TileGenerator from "../TileGenerator";
+import JsonManager from "../JsonManager";
 
 /**
  * View for {@link PlayController}. Handles parallax scrolling.
@@ -85,13 +85,13 @@ class ForegroundView extends PIXI.Container {
    *
    * @param tileMap
    */
-  constructor(tileMap: TileMap) {
+  constructor() {
     super();
-    this.tileMap = tileMap;
-    this.addChild(tileMap);
   }
 
-  public start() {}
+  public init(tileMap: TileMap) {
+    this.tileMap = tileMap;
+  }
 
   /**
    * Call this method every frame to update all the game objects in the foreground
@@ -153,19 +153,23 @@ class PlayController extends Controller {
   private chatSendButton: Button;
 
   private tileMap: TileMap;
-  private player: Player;
-  private otherPlayers: { [id: string]: Player };
+
+  private get player() {
+    return this.players[this.socket.id];
+  }
+
+  private players: { [id: string]: Player };
   private enemies: { [id: string]: Enemy };
 
   constructor(username: string) {
     super();
 
     this.socket = io();
-    this.otherPlayers = {};
+    this.players = {};
     this.enemies = {};
 
-    this.tileMap = new TileMap();
-    this.player = new Player();
+    this.players[this.socket.id] = this.player;
+
     this.chatInput = new Input(25, {
       borderWidth: 1,
       borderColor: Color.WHITE,
@@ -186,8 +190,15 @@ class PlayController extends Controller {
     });
 
     this.backgroundView = new BackgroundView(1024);
-    this.foregroundView = new ForegroundView(this.tileMap);
+    this.foregroundView = new ForegroundView();
     this.uiView = new UIView(this.chatInput, this.chatSendButton);
+
+    this.tileMap = new TileMap(
+      JsonManager.shared.getTileMapData(),
+      new TileGenerator(this.foregroundView)
+    );
+
+    this.foregroundView.init(this.tileMap);
 
     this.chatSendButton.onClick(this.sendChat);
 
@@ -201,7 +212,7 @@ class PlayController extends Controller {
     // register callbacks on socket events
     this.socket.on("init", this.onInit);
     this.socket.on("create", this.onCreate);
-    this.socket.on("update-player", this.onUpdatePlayer);
+    this.socket.on("update-players", this.onUpdatePlayers);
     this.socket.on("update-enemies", this.onUpdateEnemies);
     this.socket.on("delete", this.onDelete);
   }
@@ -209,32 +220,32 @@ class PlayController extends Controller {
   public start() {}
 
   public tick = () => {
-    this.player.tick(this.chatInput.getFocused());
-    this.chatInput.tick();
-
-    if (this.chatInput.getFocused()) {
-      const enterKey = Keyboard.shared.getKey("Enter");
-      if (enterKey.isPressed) {
-        this.sendChat();
+    if (this.player) {
+      if (this.chatInput.getFocused()) {
+        this.chatInput.tick();
+      } else {
+        this.player.tick(this.socket);
       }
+
+      if (this.chatInput.getFocused()) {
+        const enterKey = Keyboard.shared.getKey("Enter");
+        if (enterKey.isPressed) {
+          this.sendChat();
+        }
+      }
+
+      this.backgroundView.tick(this.player);
+      this.foregroundView.tick(this.player);
+
+      // notify all other connections about the player data of this connection
+      this.socket.emit("update-player", this.player.json());
     }
-
-    Gravity.shared.tick([this.player]);
-    Collision.shared.tick(
-      this.player,
-      Object.values(this.enemies),
-      this.tileMap
-    );
-    this.backgroundView.tick(this.player);
-    this.foregroundView.tick(this.player);
-
-    // notify all other connections about the player data of this connection
-    this.socket.emit("update-player", this.player.json());
   };
 
   private sendChat = () => {
     if (this.chatInput.getValue()) {
-      this.player.say(this.chatInput.getValue());
+      // this.player.say(this.chatInput.getValue());
+      this.socket.emit("chat", this.chatInput.getValue());
       this.chatInput.clear();
       this.chatInput.setFocused(false);
     }
@@ -245,14 +256,9 @@ class PlayController extends Controller {
     enemies: { [id: string]: EnemyJson };
   }) => {
     Object.entries(data.players).forEach(([id, json]) => {
-      if (id === this.socket.id) {
-        this.player.applyJson(json);
-        this.foregroundView.addChild(this.player);
-      } else {
-        const player = Player.fromJson(json);
-        this.otherPlayers[id] = player;
-        this.foregroundView.addChild(player);
-      }
+      const player = Player.fromJson(json);
+      this.players[id] = player;
+      this.foregroundView.addChild(player);
     });
     Object.entries(data.enemies).forEach(([id, json]) => {
       const enemy = Enemy.fromJson(json);
@@ -263,18 +269,15 @@ class PlayController extends Controller {
 
   private onCreate = (data: { id: number; json: PlayerJson }) => {
     const { id, json } = data;
-
     const player = Player.fromJson(json);
-    this.otherPlayers[id] = player;
+    this.players[id] = player;
     this.foregroundView.addChild(player);
   };
 
-  private onUpdatePlayer = (data: { id: number; json: PlayerJson }) => {
-    const { id, json } = data;
-    if (this.otherPlayers[id] == null) {
-      return;
-    }
-    this.otherPlayers[id].applyJson(json);
+  private onUpdatePlayers = (data: { [id: string]: PlayerJson }) => {
+    Object.entries(data).forEach(([id, json]) => {
+      this.players[id].applyJson(json);
+    });
   };
 
   private onUpdateEnemies = (data: { [id: string]: EnemyJson }) => {
@@ -285,8 +288,8 @@ class PlayController extends Controller {
 
   private onDelete = (data: { id: number }) => {
     const { id } = data;
-    this.foregroundView.removeChild(this.otherPlayers[id]);
-    delete this.otherPlayers[id];
+    this.foregroundView.removeChild(this.players[id]);
+    delete this.players[id];
   };
 }
 

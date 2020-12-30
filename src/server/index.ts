@@ -1,5 +1,6 @@
 /**
- * Entry point of the game server.
+ * The server starts by running `index.ts`. Instantiate {@link App}
+ * in this file to start the game server.
  *
  * @packageDocumentation
  */

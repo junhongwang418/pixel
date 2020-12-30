@@ -1,5 +1,5 @@
 import Sprite from "./Sprite";
-import { EnemyState, EnemyJson } from "../../server/Enemy";
+import { EnemyState, EnemyJson } from "../../server/sprite/Enemy";
 import TextureManager from "../TextureManager";
 
 /**

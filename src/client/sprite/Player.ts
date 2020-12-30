@@ -5,7 +5,7 @@ import Effect from "./Effect";
 import Enemy from "./Enemy";
 import TextureManager from "../TextureManager";
 import SoundManager from "../SoundManager";
-import { PlayerJson, PlayerState } from "../../server/Player";
+import { PlayerJson, PlayerState } from "../../server/sprite/Player";
 import Text from "../ui/Text";
 
 class NameTag extends PIXI.Container {
@@ -147,75 +147,30 @@ class Player extends Sprite {
   /**
    * Update state for current frame.
    */
-  public tick = (ignoreKeyboard = false) => {
-    super.tick();
-
-    // this.nameTag.y = this.height / this.scale.y;
-
-    this.landingElapsedMS += PIXI.Ticker.shared.elapsedMS;
-    this.punchElapsedMS += PIXI.Ticker.shared.elapsedMS;
-
-    if (this.state === PlayerState.Hurt) {
-      // in the air or just gets hurt
-      if (!this.onGround || this.vy < 0) {
-        return;
-      }
-    }
-
-    // landing motion
-    if (
-      this.state === PlayerState.Landing &&
-      this.landingElapsedMS < Player.LANDING_DURATION
-    ) {
-      return;
-    }
-
-    // punching motion
-    if (
-      this.state === PlayerState.Punch &&
-      this.punchElapsedMS < Player.PUNCH_DURATION
-    ) {
-      return;
-    }
-
+  public tick = (socket: SocketIOClient.Socket) => {
     const keyA = Keyboard.shared.getKey("a");
     const keyD = Keyboard.shared.getKey("d");
     const keyW = Keyboard.shared.getKey("w");
     const keyJ = Keyboard.shared.getKey("j");
 
-    // update velocity
-    if (ignoreKeyboard) {
-      this.vx = 0;
-    } else if (keyA.isDown) {
-      this.vx = -Player.MOVE_SPEED;
-      this.setFlipped(true);
-    } else if (keyD.isDown) {
-      this.vx = Player.MOVE_SPEED;
-      this.setFlipped(false);
-    } else {
-      this.vx = 0;
-    }
-
-    // update state
-    if (this.onGround) {
-      if ([PlayerState.Jumping, PlayerState.Falling].includes(this.state)) {
-        this.setState(PlayerState.Landing);
-      } else if (ignoreKeyboard) {
-        this.setState(PlayerState.Idle);
-      } else if (keyJ.isPressed) {
-        this.setState(PlayerState.Punch);
-      } else if (keyW.isDown) {
-        this.setState(PlayerState.Jumping);
-      } else if (keyA.isDown || keyD.isDown) {
-        this.setState(PlayerState.Run);
-      } else {
-        this.setState(PlayerState.Idle);
-      }
-    } else {
-      if (this.vy > 0) {
-        this.setState(PlayerState.Falling);
-      }
-    }
+    socket.emit("player-input", {
+      a: {
+        isDown: keyA.isDown,
+        isPressed: keyA.isPressed,
+      },
+      d: {
+        isDown: keyD.isDown,
+        isPressed: keyD.isPressed,
+      },
+      w: {
+        isDown: keyW.isDown,
+        isPressed: keyW.isPressed,
+      },
+      j: {
+        isDown: keyJ.isDown,
+        isPressed: keyJ.isPressed,
+      },
+    });
   };
 
   /**
@@ -227,9 +182,21 @@ class Player extends Sprite {
     super.applyJson(json);
     const { state, blinking, name, saying } = json;
     this.setState(state);
-    if (!this.blinking && blinking) {
-      this.blink();
+
+    if (blinking) {
+      if (!this.blinkInterval) {
+        this.blinkInterval = setInterval(() => {
+          this.alpha = this.alpha ? 0 : 1;
+        }, Player.BLINK_INTERVAL);
+      }
+    } else {
+      if (this.blinkInterval) {
+        clearInterval(this.blinkInterval);
+        this.blinkInterval = null;
+        this.alpha = 1;
+      }
     }
+
     this.username = name;
     this.nameTag.setName(name);
     this.nameTag.x = this.width / 2 - this.nameTag.width / 2;

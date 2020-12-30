@@ -1,43 +1,86 @@
-import Sprite from "./Sprite";
-import JsonLoader from "./JsonLoader";
-import { TileMapData } from "../client/JsonManager";
+/**
+ * Data structure of Tile map from
+ * [Tiled Map Editor](https://www.mapeditor.org/).
+ */
+export interface TileMapData {
+  compressionlevel: number;
+  height: number;
+  infinite: boolean;
+  layers: {
+    data: number[];
+    height: number;
+    id: number;
+    name: string;
+    opacity: number;
+    type: string;
+    visible: boolean;
+    width: number;
+    x: number;
+    y: number;
+  }[];
+  nextlayerid: number;
+  nextobjectid: number;
+  orientation: string;
+  renderorder: string;
+  tileversion: string;
+  tileheight: number;
+  tilesets: {
+    columns: number;
+    firstgid: number;
+    image: string;
+    imageheight: number;
+    imagewidth: number;
+    margin: number;
+    spacing: number;
+    tilecount: number;
+    tileheight: number;
+    tilewidth: number;
+  }[];
+  tilewidth: number;
+  type: string;
+  version: number;
+  width: number;
+}
 
-class Tile extends Sprite {
-  public id: number;
+export interface ITile {
+  id: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
-  constructor(id: number) {
-    super();
-    this.id = id;
-  }
+export interface ITileGenerator {
+  create(id: number): ITile;
 }
 
 class TileMap {
-  private static readonly TILE_SIZE = 48;
+  public static readonly TILE_SIZE = 48;
 
-  private tiles: (Tile | null)[][];
+  public data: TileMapData;
 
-  public constructor() {
-    const tileMapData = JsonLoader.shared.jsons[
-      "dist/client/assets/map/grassland/1.json"
-    ] as TileMapData;
+  protected tiles: (ITile | null)[][];
+
+  public constructor(tileMapData: TileMapData, tileGenerator: ITileGenerator) {
+    this.data = tileMapData;
 
     const height = tileMapData.layers[0].height;
     const width = tileMapData.layers[0].width;
     const data = tileMapData.layers[0].data;
 
     this.tiles = new Array(height);
-    for (let i = 0; i < this.tiles.length; i++) {
-      this.tiles[i] = new Array(width);
-      for (let j = 0; j < this.tiles[i].length; j++) {
-        const tileId = data[i * width + j];
+
+    for (let r = 0; r < this.tiles.length; r++) {
+      this.tiles[r] = new Array(width);
+      for (let c = 0; c < this.tiles[r].length; c++) {
+        const tileId = data[r * width + c];
         if (tileId > 0) {
-          const tile = new Tile(tileId);
-          tile.x = TileMap.TILE_SIZE * j;
-          tile.y = TileMap.TILE_SIZE * i;
-          tile.width = TileMap.TILE_SIZE;
-          this.tiles[i][j] = tile;
+          const tile = tileGenerator.create(tileId);
+          tile.x = TileMap.TILE_SIZE * c;
+          tile.y = TileMap.TILE_SIZE * r;
+          this.tiles[r][c] = tile;
         } else {
-          this.tiles[i][j] = null;
+          this.tiles[r][c] = null;
         }
       }
     }
@@ -49,39 +92,27 @@ class TileMap {
    * @param x X position in pixels
    * @param y Y position in pixels
    */
-  public getTileIdAtPoint(x: number, y: number): Tile | null {
-    return this.getTileIdAtPosition(
+  public getTileAtPoint(x: number, y: number): ITile | null {
+    return this.getTileAtPosition(
       Math.floor(x / TileMap.TILE_SIZE),
       Math.floor(y / TileMap.TILE_SIZE)
     );
   }
 
   /**
-   * Get the tile by index position. The index starts from top left.
-   *
-   * ```
-   * ------------------ ...
-   * |        |
-   * | (0, 0) | (1, 0)
-   * |        |
-   * ------------------ ...
-   * |        |
-   * | (0, 1) | (1, 1)
-   * |        |
-   *
-   * ```
+   * Get the tile by index position. The tile at top left corner
+   * has index position of (0, 0).
    *
    * @param tileIndexX Index in x axis
    * @param tileIndexY Index in y axis
    */
-  public getTileIdAtPosition(
+  public getTileAtPosition(
     tileIndexX: number,
     tileIndexY: number
-  ): Tile | null {
+  ): ITile | null {
     if (tileIndexY < 0 || tileIndexY >= this.tiles.length) {
-      return null;
+      return;
     }
-
     return this.tiles[tileIndexY][tileIndexX];
   }
 }

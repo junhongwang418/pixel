@@ -1,4 +1,5 @@
-import Sprite from "./Sprite";
+import App from "./App";
+import Sprite from "./sprite/Sprite";
 
 /**
  * A singleton class that handles the gravity of the game.
@@ -20,7 +21,7 @@ class Gravity {
    */
   public tick(sprites: Sprite[]) {
     sprites.forEach((s) => {
-      s.vy += (Gravity.G * 16.66) / 1000;
+      s.vy += (Gravity.G * App.TICK_INTERVAL_MS) / 1000;
     });
   }
 }

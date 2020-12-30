@@ -1,4 +1,4 @@
-import Random from "./Random";
+import Random from "../Random";
 import Sprite, { SpriteJson } from "./Sprite";
 
 export enum EnemyState {
