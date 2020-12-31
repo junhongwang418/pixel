@@ -130,15 +130,47 @@ class ForegroundView extends PIXI.Container {
  * View for {@link PlayController}. Renders the chat window.
  */
 class UIView extends PIXI.Container {
-  constructor(chatInput: Input, chatSendButton: Button) {
+  private chatInput: Input;
+  private chatSendButton: Button;
+
+  constructor() {
     super();
 
-    chatInput.y = App.shared.viewport.height - chatInput.height;
-    chatSendButton.x = chatInput.x + chatInput.width;
-    chatSendButton.y = chatInput.y;
+    this.chatInput = new Input(25, {
+      borderWidth: 1,
+      borderColor: Color.WHITE,
+      backgroundColor: Color.BLACK,
+      backgroundAlpha: 0.72,
+      paddingX: 16,
+      paddingY: 8,
+      color: Color.WHITE,
+    });
 
-    this.addChild(chatInput);
-    this.addChild(chatSendButton);
+    this.chatInput.y = App.shared.viewport.height - this.chatInput.height;
+
+    this.chatSendButton = new Button("Send", {
+      borderWidth: 1,
+      borderColor: Color.WHITE,
+      backgroundColor: Color.BLACK,
+      backgroundAlpha: 0.72,
+      color: Color.WHITE,
+      paddingX: 16,
+      paddingY: 8,
+    });
+
+    this.chatSendButton.x = this.chatInput.x + this.chatInput.width;
+    this.chatSendButton.y = this.chatInput.y;
+
+    this.addChild(this.chatInput);
+    this.addChild(this.chatSendButton);
+  }
+
+  public getChatInput() {
+    return this.chatInput;
+  }
+
+  public getChatSendButton() {
+    return this.chatSendButton;
   }
 }
 
@@ -149,8 +181,12 @@ class PlayController extends Controller {
   private foregroundView: ForegroundView;
   private uiView: UIView;
 
-  private chatInput: Input;
-  private chatSendButton: Button;
+  private get chatInput() {
+    return this.uiView.getChatInput();
+  }
+  private get chatSendButton() {
+    return this.uiView.getChatSendButton();
+  }
 
   private tileMap: TileMap;
 
@@ -170,28 +206,9 @@ class PlayController extends Controller {
 
     this.players[this.socket.id] = this.player;
 
-    this.chatInput = new Input(25, {
-      borderWidth: 1,
-      borderColor: Color.WHITE,
-      backgroundColor: Color.BLACK,
-      backgroundAlpha: 0.72,
-      paddingX: 16,
-      paddingY: 8,
-      color: Color.WHITE,
-    });
-    this.chatSendButton = new Button("Send", {
-      borderWidth: 1,
-      borderColor: Color.WHITE,
-      backgroundColor: Color.BLACK,
-      backgroundAlpha: 0.72,
-      color: Color.WHITE,
-      paddingX: 16,
-      paddingY: 8,
-    });
-
     this.backgroundView = new BackgroundView(1024);
     this.foregroundView = new ForegroundView();
-    this.uiView = new UIView(this.chatInput, this.chatSendButton);
+    this.uiView = new UIView();
 
     this.tileMap = new TileMap(
       JsonManager.shared.getTileMapData(),

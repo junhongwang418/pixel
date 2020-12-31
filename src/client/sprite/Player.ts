@@ -1,147 +1,59 @@
-import * as PIXI from "pixi.js";
 import Sprite from "./Sprite";
 import Keyboard from "../input/Keyboard";
 import Effect from "./Effect";
-import Enemy from "./Enemy";
 import TextureManager from "../manager/TextureManager";
 import SoundManager from "../manager/SoundManager";
-import Text from "../ui/Text";
-import { PlayerJson, PlayerState } from "../../common/sprite/Player";
-
-class NameTag extends PIXI.Container {
-  public box: PIXI.Graphics;
-  private nameText: Text;
-
-  constructor(name: string) {
-    super();
-
-    this.nameText = new Text(name, { color: 0xffffff });
-    this.nameText.x = 4;
-    this.nameText.y = 2;
-
-    this.box = new PIXI.Graphics();
-    this.box.beginFill(0x000000, 0.72);
-    this.box.drawRect(0, 0, this.nameText.width + 8, this.nameText.height + 4);
-    this.box.endFill();
-
-    this.addChild(this.box);
-    this.box.addChild(this.nameText);
-  }
-
-  public setName(name: string) {
-    this.nameText.text = name;
-    this.removeChild(this.box);
-    this.box = new PIXI.Graphics();
-    this.box.beginFill(0x000000, 0.72);
-    this.box.drawRect(0, 0, this.nameText.width + 8, this.nameText.height + 4);
-    this.box.endFill();
-    this.addChild(this.box);
-    this.box.addChild(this.nameText);
-  }
-}
-
-class TextBubble extends PIXI.Container {
-  private box: PIXI.Graphics;
-  private text: Text;
-
-  constructor() {
-    super();
-    this.text = new Text("");
-  }
-
-  public setText(text: string) {
-    if (this.box) {
-      this.removeChild(this.box);
-    }
-
-    this.text.text = text;
-    this.text.x = 8;
-    this.text.y = 4;
-
-    const boxWidth = this.text.width + 16;
-    const boxHeight = this.text.height + 8;
-
-    this.box = new PIXI.Graphics();
-    this.box.lineStyle(1, 0x000000);
-    this.box.beginFill(0xffffff);
-    this.box.moveTo(0, 0);
-    this.box.lineTo(boxWidth, 0);
-    this.box.lineTo(boxWidth, boxHeight);
-    this.box.lineTo(boxWidth / 2 + 8, boxHeight);
-    this.box.lineTo(boxWidth / 2 - 8, boxHeight + 8);
-    this.box.lineTo(boxWidth / 2 - 4, boxHeight);
-    this.box.lineTo(0, boxHeight);
-    this.box.lineTo(0, 0);
-    // this.box.drawRect(0, 0, this.text.width + 16, this.text.height + 8);
-    this.box.endFill();
-
-    this.addChild(this.box);
-    this.box.addChild(this.text);
-  }
-
-  public get value() {
-    return this.text.text;
-  }
-}
+import {
+  PlayerInput,
+  PlayerJson,
+  PlayerState,
+} from "../../common/sprite/Player";
+import Paragraph from "../ui/Paragraph";
+import Color from "../Color";
+import MessageBubble from "../ui/MessageBubble";
 
 /**
  * The sprite the user can control.
  */
 class Player extends Sprite {
-  private static readonly LANDING_DURATION = 100;
-  private static readonly JUMP_SPEED = 600;
-  private static readonly MOVE_SPEED = 140;
-  private static readonly PUNCH_DURATION = 300;
-  private static readonly BLINK_DURATION = 2000;
   private static readonly BLINK_INTERVAL = 60;
-  private static readonly HURT_IMPACT_X = 60;
-  private static readonly HURT_IMPACT_Y = 200;
 
   private state: PlayerState;
+
+  private nameTag: Paragraph;
+  private messageBubble: MessageBubble;
+
   private punchEffect: Effect;
-  private landingElapsedMS: number;
-  private punchElapsedMS: number;
   private blinkInterval: NodeJS.Timeout | null;
-  private nameTag: NameTag;
-  private username: string;
-  private textBubble: TextBubble;
-  private textBubbleTimeout: NodeJS.Timeout | null;
 
   public constructor() {
     super(Player.getTextures(PlayerState.Idle));
     this.setState(PlayerState.Idle);
-    this.landingElapsedMS = 0;
-    this.punchElapsedMS = 0;
+
     this.blinkInterval = null;
-    this.username = "";
-    this.textBubble = new TextBubble();
-    this.textBubbleTimeout = null;
+    this.messageBubble = new MessageBubble("", {
+      borderWidth: 1,
+      borderColor: Color.BLACK,
+      color: Color.BLACK,
+      paddingX: 8,
+      paddingY: 4,
+      backgroundColor: Color.WHITE,
+      backgroundAlpha: 1,
+    });
 
     // position relative to player
     this.punchEffect = new Effect(48, -8);
 
-    this.nameTag = new NameTag(this.username);
+    this.nameTag = new Paragraph("", {
+      color: Color.WHITE,
+      paddingX: 8,
+      paddingY: 4,
+      backgroundAlpha: 0.82,
+    });
     this.nameTag.x = this.width / 2 - this.nameTag.width / 2;
     this.nameTag.y = this.height + 4;
 
     this.addChild(this.nameTag);
-  }
-
-  public say(text: string) {
-    this.textBubble.setText(text);
-    this.textBubble.x = this.width / 2 - this.textBubble.width / 2;
-    this.textBubble.y = -this.textBubble.height - 8;
-
-    if (this.textBubbleTimeout) {
-      clearTimeout(this.textBubbleTimeout);
-    } else {
-      this.addChild(this.textBubble);
-    }
-
-    this.textBubbleTimeout = setTimeout(() => {
-      this.removeChild(this.textBubble);
-      this.textBubbleTimeout = null;
-    }, 3000);
   }
 
   /**
@@ -153,7 +65,7 @@ class Player extends Sprite {
     const keyW = Keyboard.shared.getKey("w");
     const keyJ = Keyboard.shared.getKey("j");
 
-    socket.emit("player-input", {
+    const input: PlayerInput = {
       a: {
         isDown: keyA.isDown,
         isPressed: keyA.isPressed,
@@ -170,7 +82,9 @@ class Player extends Sprite {
         isDown: keyJ.isDown,
         isPressed: keyJ.isPressed,
       },
-    });
+    };
+
+    socket.emit("player-input", input);
   };
 
   /**
@@ -197,18 +111,17 @@ class Player extends Sprite {
       }
     }
 
-    this.username = name;
-    this.nameTag.setName(name);
+    this.nameTag.setText(name);
     this.nameTag.x = this.width / 2 - this.nameTag.width / 2;
     this.nameTag.y = this.height + 4;
 
     if (saying) {
-      this.textBubble.setText(saying);
-      this.textBubble.x = this.width / 2 - this.textBubble.width / 2;
-      this.textBubble.y = -this.textBubble.height - 8;
-      this.addChild(this.textBubble);
+      this.messageBubble.setText(saying);
+      this.messageBubble.x = this.width / 2 - this.messageBubble.width / 2;
+      this.messageBubble.y = -this.messageBubble.height - 8;
+      this.addChild(this.messageBubble);
     } else {
-      this.removeChild(this.textBubble);
+      this.removeChild(this.messageBubble);
     }
   }
 
@@ -231,8 +144,8 @@ class Player extends Sprite {
       ...super.json(),
       state: this.state,
       blinking: this.blinking,
-      name: this.username,
-      saying: this.textBubbleTimeout ? this.textBubble.value : "",
+      name: this.nameTag.getText(),
+      saying: this.messageBubble.getText(),
     };
   }
 
@@ -259,34 +172,13 @@ class Player extends Sprite {
       SoundManager.shared.footstep.stop();
     }
 
-    if (state === PlayerState.Landing) {
-      this.landingElapsedMS = 0;
-    } else if (state === PlayerState.Punch) {
-      this.vx = 0;
+    if (state === PlayerState.Punch) {
       SoundManager.shared.punch.play();
-      this.punchElapsedMS = 0;
     } else if (state === PlayerState.Jumping) {
-      this.vy = -Player.JUMP_SPEED;
       SoundManager.shared.jump.play();
+    } else if (state === PlayerState.Hurt) {
+      SoundManager.shared.hurt.play();
     }
-  }
-
-  /**
-   * Receives damage from enemy and gets knocked back.
-   *
-   * @param enemy The enemy to receive the damage from
-   * @param direction The knockback direction. `1` is right. `-1` is left.
-   */
-  public hurt(enemy: Enemy, direction: 1 | -1) {
-    if (this.blinking) {
-      return;
-    }
-
-    this.setState(PlayerState.Hurt);
-    this.vy = -Player.HURT_IMPACT_Y;
-    this.vx = direction * Player.HURT_IMPACT_X;
-    this.blink();
-    SoundManager.shared.hurt.play();
   }
 
   /**
@@ -315,28 +207,6 @@ class Player extends Sprite {
     }
   }
 
-  /**
-   * Flicker the sprite for a while. Flash the player when it receives
-   * a damage to indicate that the player is invincible for a certain
-   * period.
-   */
-  private blink() {
-    // already blinking
-    if (this.blinkInterval) {
-      return;
-    }
-
-    this.blinkInterval = setInterval(() => {
-      this.alpha = this.alpha ? 0 : 1;
-    }, Player.BLINK_INTERVAL);
-
-    setTimeout(() => {
-      clearInterval(this.blinkInterval);
-      this.blinkInterval = null;
-      this.alpha = 1;
-    }, Player.BLINK_DURATION);
-  }
-
   public get blinking() {
     return this.blinkInterval != null;
   }
@@ -347,8 +217,9 @@ class Player extends Sprite {
     this.nameTag.scale.x *= -1;
     this.nameTag.position.x = this.width / 2 - this.nameTag.width / 2;
 
-    this.textBubble.scale.x *= -1;
-    this.textBubble.position.x = this.width / 2 - this.textBubble.width / 2;
+    this.messageBubble.scale.x *= -1;
+    this.messageBubble.position.x =
+      this.width / 2 - this.messageBubble.width / 2;
 
     super.setFlipped(flipped);
   }

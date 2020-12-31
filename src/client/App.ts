@@ -78,6 +78,7 @@ class App extends PIXI.Application {
     if (this.controller != null) {
       this.stage.removeChild(this.controller);
       this.ticker.remove(this.tick);
+      this.controller.destroy();
     }
 
     // set new view and tick

@@ -3,7 +3,6 @@ import App from "../App";
 import MenuController from "./MenuController";
 import Controller from "./Controller";
 import Text from "../ui/Text";
-import Div from "../ui/Div";
 import Color from "../Color";
 
 /**
@@ -16,13 +15,13 @@ class LoadingView extends PIXI.Container {
   constructor() {
     super();
 
-    this.loadingText = new Text("Loading...", { color: 0xffffff });
+    this.loadingText = new Text("Loading...", { color: Color.WHITE });
     this.loadingText.x =
       App.shared.viewport.width / 2 - this.loadingText.width / 2;
     this.loadingText.y =
       App.shared.viewport.height / 2 - this.loadingText.height;
 
-    this.percentageText = new Text("", { color: 0xffffff });
+    this.percentageText = new Text("", { color: Color.WHITE });
     this.setPercentage(0);
 
     this.addChild(this.loadingText);
@@ -41,7 +40,7 @@ class LoadingView extends PIXI.Container {
 /**
  * Load all the assets needed for the game and display current
  * loading progress to the player. Once all the resources are
- * loaded, it delegates the job to {@link MenuController}.
+ * loaded, it delegates rest of the job to {@link MenuController}.
  */
 class LoadingController extends Controller {
   private loadingView: LoadingView;
@@ -54,18 +53,16 @@ class LoadingController extends Controller {
 
   public start() {
     const loader = PIXI.Loader.shared;
+    loader.onProgress.add((loader) => {
+      this.loadingView.setPercentage(Math.round(loader.progress));
+    });
     loader.load(() => {
       // all the files are loaded
       App.shared.setController(new MenuController());
     });
   }
 
-  public tick = () => {
-    const loader = PIXI.Loader.shared;
-    loader.onProgress.add((loader) => {
-      this.loadingView.setPercentage(Math.round(loader.progress));
-    });
-  };
+  public tick() {}
 }
 
 export default LoadingController;

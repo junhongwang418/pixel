@@ -15,19 +15,14 @@ export interface DivOptions {
 class Div extends PIXI.Container {
   protected border: PIXI.Graphics;
   protected body: PIXI.Container;
+  protected options?: any;
 
   constructor(width: number, height: number, options?: DivOptions) {
     super();
 
-    this.width = width;
-    this.height = height;
+    this.options = options;
 
-    this.border = new PIXI.Graphics();
-    this.border.lineStyle(options?.borderWidth, 0xffffff);
-    this.border.beginFill(options?.backgroundColor, options?.backgroundAlpha);
-    this.border.drawRect(0, 0, width, height);
-    this.border.endFill();
-    this.border.tint = options?.borderColor;
+    this.border = this.createBorder(width, height, options);
 
     this.body = new PIXI.Container();
     this.body.x = (options?.borderWidth || 0) + (options?.paddingX || 0);
@@ -35,6 +30,25 @@ class Div extends PIXI.Container {
 
     this.addChild(this.border);
     this.addChild(this.body);
+  }
+
+  protected resize(width: number, height: number) {
+    this.removeChild(this.body);
+    this.removeChild(this.border);
+
+    this.border = this.createBorder(width, height, this.options);
+
+    this.addChild(this.border);
+    this.addChild(this.body);
+  }
+
+  protected createBorder(width: number, height: number, options?: DivOptions) {
+    const border = new PIXI.Graphics();
+    border.lineStyle(options?.borderWidth, options?.borderColor);
+    border.beginFill(options?.backgroundColor, options?.backgroundAlpha);
+    border.drawRect(0, 0, width, height);
+    border.endFill();
+    return border;
   }
 }
 

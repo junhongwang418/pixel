@@ -1,11 +1,10 @@
 import * as PIXI from "pixi.js";
 import PlayController from "./PlayController";
 import Controller from "./Controller";
-import Text, { FontSize } from "../ui/Text";
+import { FontSize } from "../ui/Text";
 import Input from "../ui/Input";
 import App from "../App";
 import Button from "../ui/Button";
-import Div from "../ui/Div";
 import Color from "../Color";
 import Paragraph from "../ui/Paragraph";
 
@@ -13,12 +12,33 @@ import Paragraph from "../ui/Paragraph";
  * View for {@link MenuController}.
  */
 class MenuView extends PIXI.Container {
+  private nameInput: Input;
+  private playButton: Button;
+
   private nameText: Paragraph;
   private tutorialText: Paragraph;
   private promptText: Paragraph;
 
-  constructor(nameInput: Input, playButton: Button) {
+  constructor() {
     super();
+
+    this.nameInput = new Input(10, {
+      color: Color.WHITE,
+      fontSize: FontSize.Medium,
+      borderWidth: 1,
+      borderColor: Color.WHITE,
+      paddingX: 16,
+      paddingY: 8,
+    });
+
+    this.playButton = new Button("PLAY", {
+      fontSize: FontSize.Medium,
+      color: Color.WHITE,
+      borderColor: Color.WHITE,
+      borderWidth: 1,
+      paddingX: 16,
+      paddingY: 8,
+    });
 
     const viewportWidth = App.shared.viewport.width;
     const viewportHeight = App.shared.viewport.height;
@@ -44,17 +64,30 @@ class MenuView extends PIXI.Container {
     this.nameText.x = viewportWidth / 2 - this.nameText.width / 2;
     this.nameText.y = this.tutorialText.y - 100;
 
-    nameInput.x = viewportWidth / 2 - nameInput.width / 2;
-    nameInput.y = this.nameText.y + 30;
+    this.nameInput.x = viewportWidth / 2 - this.nameInput.width / 2;
+    this.nameInput.y = this.nameText.y + 30;
 
-    playButton.x = viewportWidth / 2 - playButton.width / 2;
-    playButton.y = this.promptText.y + 50;
+    this.playButton.x = viewportWidth / 2 - this.playButton.width / 2;
+    this.playButton.y = this.promptText.y + 50;
 
     this.addChild(this.promptText);
     this.addChild(this.tutorialText);
     this.addChild(this.nameText);
-    this.addChild(nameInput);
-    this.addChild(playButton);
+    this.addChild(this.nameInput);
+    this.addChild(this.playButton);
+  }
+
+  public getNameInput() {
+    return this.nameInput;
+  }
+
+  public getPlayButton() {
+    return this.playButton;
+  }
+
+  public destroy() {
+    this.nameInput.destroy();
+    super.destroy();
   }
 }
 
@@ -62,29 +95,19 @@ class MenuView extends PIXI.Container {
  * Prompt the player to enter their name and start the game.
  */
 class MenuController extends Controller {
-  private nameInput: Input;
-  private playButton: Button;
   private menuView: MenuView;
+
+  private get nameInput() {
+    return this.menuView.getNameInput();
+  }
+
+  private get playButton() {
+    return this.menuView.getPlayButton();
+  }
 
   constructor() {
     super();
-    this.nameInput = new Input(10, {
-      color: Color.WHITE,
-      fontSize: FontSize.Medium,
-      borderWidth: 1,
-      borderColor: Color.WHITE,
-      paddingX: 16,
-      paddingY: 8,
-    });
-    this.playButton = new Button("PLAY", {
-      fontSize: FontSize.Medium,
-      color: Color.WHITE,
-      borderColor: Color.WHITE,
-      borderWidth: 1,
-      paddingX: 16,
-      paddingY: 8,
-    });
-    this.menuView = new MenuView(this.nameInput, this.playButton);
+    this.menuView = new MenuView();
     this.addChild(this.menuView);
   }
 
@@ -97,12 +120,12 @@ class MenuController extends Controller {
     });
   }
 
-  public tick = () => {
+  public tick() {
     this.nameInput.tick();
-  };
+  }
 
   public destroy() {
-    this.nameInput.destroy();
+    this.menuView.destroy();
     super.destroy();
   }
 }
